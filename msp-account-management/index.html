@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSP Account Management Platform</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // ── Sample Data ──────────────────────────────────────────────────────
+    const defaultResources = [
+      { code: 'STA', name: 'Strategic Advisor', rate: 50, billableRate: 150 },
+      { code: 'AM', name: 'Account Manager', rate: 35, billableRate: 105 },
+      { code: 'TAM', name: 'Technical Account Manager', rate: 40, billableRate: 120 },
+      { code: 'SE', name: 'Service Engineer', rate: 30, billableRate: 90 },
+    ];
+
+    const defaultActivityCatalog = [
+      { id: 1, name: 'Annual Strategic Planning', resourceHours: [{ resource: 'STA', hours: 8 }, { resource: 'AM', hours: 8 }] },
+      { id: 2, name: 'Quarterly Business Review', resourceHours: [{ resource: 'AM', hours: 4 }, { resource: 'TAM', hours: 2 }] },
+      { id: 3, name: 'Monthly Check-in Call', resourceHours: [{ resource: 'AM', hours: 1 }] },
+      { id: 4, name: 'Technology Roadmap Review', resourceHours: [{ resource: 'TAM', hours: 4 }, { resource: 'STA', hours: 2 }] },
+      { id: 5, name: 'Security Assessment', resourceHours: [{ resource: 'SE', hours: 6 }, { resource: 'TAM', hours: 2 }] },
+      { id: 6, name: 'Budget Planning Session', resourceHours: [{ resource: 'STA', hours: 4 }, { resource: 'AM', hours: 4 }] },
+      { id: 7, name: 'Service Desk Review', resourceHours: [{ resource: 'SE', hours: 2 }, { resource: 'AM', hours: 1 }] },
+      { id: 8, name: 'Network Health Check', resourceHours: [{ resource: 'SE', hours: 4 }] },
+      { id: 9, name: 'Vendor Management Review', resourceHours: [{ resource: 'AM', hours: 2 }] },
+      { id: 10, name: 'Compliance Review', resourceHours: [{ resource: 'TAM', hours: 4 }, { resource: 'STA', hours: 2 }] },
+    ];
+
+    const defaultPlaybooks = {
+      'High Touch': { assignments: [{ activityId: 1, frequency: 1 }, { activityId: 2, frequency: 4 }, { activityId: 3, frequency: 12 }, { activityId: 4, frequency: 2 }, { activityId: 5, frequency: 2 }, { activityId: 6, frequency: 1 }] },
+      'Mid Touch': { assignments: [{ activityId: 2, frequency: 4 }, { activityId: 3, frequency: 12 }, { activityId: 7, frequency: 4 }, { activityId: 8, frequency: 2 }] },
+      'Low Touch': { assignments: [{ activityId: 3, frequency: 4 }, { activityId: 7, frequency: 2 }, { activityId: 9, frequency: 2 }] },
+    };
+
+    const defaultClients = [
+      { id: 1, name: 'TechStart Inc', mrr: 12000, laborRevenue: 10000, margin: 0.72, efficiency: 1.25, goodFit: true, onStack: true, bestAgreement: true, overrideBestAgreement: false, actions: 'Maintain excellence and explore expansion opportunities' },
+      { id: 2, name: 'Global Logistics', mrr: 8500, laborRevenue: 7000, margin: 0.65, efficiency: 1.10, goodFit: true, onStack: true, bestAgreement: false, overrideBestAgreement: false, actions: 'Review agreement terms at next renewal' },
+      { id: 3, name: 'Metro Health', mrr: 15000, laborRevenue: 12000, margin: 0.58, efficiency: 0.95, goodFit: true, onStack: false, bestAgreement: true, overrideBestAgreement: false, actions: 'Migrate to standard stack within 6 months' },
+      { id: 4, name: 'Quick Print Co', mrr: 3500, laborRevenue: 3000, margin: 0.45, efficiency: 0.80, goodFit: false, onStack: false, bestAgreement: false, overrideBestAgreement: false, actions: 'Evaluate fit - consider transitioning out' },
+      { id: 5, name: 'Summit Financial', mrr: 20000, laborRevenue: 16000, margin: 0.78, efficiency: 1.40, goodFit: true, onStack: true, bestAgreement: true, overrideBestAgreement: false, actions: 'Top client - protect and grow relationship' },
+      { id: 6, name: 'Valley Auto Group', mrr: 6000, laborRevenue: 5000, margin: 0.52, efficiency: 0.88, goodFit: true, onStack: false, bestAgreement: false, overrideBestAgreement: false, actions: 'Stack migration priority, improve margins' },
+    ];
+
+    // ── Utility Functions ────────────────────────────────────────────────
+    function formatCurrency(n) {
+      return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    function formatPct(n) {
+      return (n * 100).toFixed(1) + '%';
+    }
+
+    // ── Modal Wrapper ────────────────────────────────────────────────────
+    function Modal({ title, onClose, children }) {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white rounded-t-lg">
+              <h3 className="text-lg font-bold">{title}</h3>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-4">{children}</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Client Modal ─────────────────────────────────────────────────────
+    function ClientModal({ client, onSave, onClose, resources }) {
+      const blank = { name: '', mrr: '', laborRevenue: '', margin: '', efficiency: '', goodFit: false, onStack: false, bestAgreement: false, overrideBestAgreement: false, actions: '' };
+      const [form, setForm] = useState(client ? { ...client, mrr: String(client.mrr), laborRevenue: String(client.laborRevenue), margin: String(client.margin), efficiency: String(client.efficiency) } : blank);
+      const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+      const handleSave = () => {
+        if (!form.name) return;
+        onSave({ ...form, mrr: Number(form.mrr) || 0, laborRevenue: Number(form.laborRevenue) || 0, margin: Number(form.margin) || 0, efficiency: Number(form.efficiency) || 0, id: client?.id || Date.now() });
+      };
+      const field = (label, key, type = 'text') => (
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+          <input type={type} value={form[key]} onChange={e => set(key, e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+        </div>
+      );
+      const check = (label, key) => (
+        <label className="flex items-center gap-2 mb-2">
+          <input type="checkbox" checked={form[key]} onChange={e => set(key, e.target.checked)} className="rounded" />
+          <span className="text-sm">{label}</span>
+        </label>
+      );
+      return (
+        <Modal title={client ? 'Edit Client' : 'Add Client'} onClose={onClose}>
+          {field('Client Name', 'name')}
+          {field('Monthly Recurring Revenue ($)', 'mrr', 'number')}
+          {field('Monthly Labor Revenue ($)', 'laborRevenue', 'number')}
+          {field('Margin (decimal, e.g. 0.72)', 'margin', 'number')}
+          {field('Efficiency (Labor Revenue / Labor Cost)', 'efficiency', 'number')}
+          {check('Good Fit', 'goodFit')}
+          {check('On Stack', 'onStack')}
+          {check('Best Agreement', 'bestAgreement')}
+          {form.bestAgreement && check('Override Best Agreement (don\'t force High Touch)', 'overrideBestAgreement')}
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Action Plan</label>
+            <textarea value={form.actions} onChange={e => set('actions', e.target.value)} className="w-full border rounded px-3 py-2 text-sm" rows={3} />
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <button onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">Cancel</button>
+            <button onClick={handleSave} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ── Action Plan Modal ────────────────────────────────────────────────
+    function ActionPlanModal({ client, onSave, onClose }) {
+      const [actions, setActions] = useState(client.actions || '');
+      const suggestions = {
+        A: ['Maintain excellence and protect relationship', 'Explore upsell and expansion opportunities', 'Use as reference client for prospects', 'Schedule executive relationship-building'],
+        B: ['Identify the missing criterion and create improvement plan', 'Review agreement terms at next renewal', 'Migrate to standard stack if off-stack', 'Increase engagement frequency'],
+        C: ['Create 90-day improvement plan', 'Address profitability concerns', 'Evaluate stack migration feasibility', 'Consider agreement restructuring'],
+        D: ['Evaluate fit - consider transitioning out', 'Set 60-day ultimatum for improvement', 'Reduce service scope to match profitability', 'Document transition plan if no improvement'],
+      };
+      return (
+        <Modal title={`Action Plan - ${client.name} (${client.rating})`} onClose={onClose}>
+          <p className="text-sm text-gray-600 mb-3">Suggested actions for {client.rating}-rated clients:</p>
+          <div className="space-y-1 mb-4">
+            {(suggestions[client.rating] || []).map((s, i) => (
+              <button key={i} onClick={() => setActions(a => a ? a + '\n' + s : s)} className="block w-full text-left text-sm px-3 py-1.5 bg-gray-50 hover:bg-blue-50 rounded border">{s}</button>
+            ))}
+          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Action Plan</label>
+          <textarea value={actions} onChange={e => setActions(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" rows={5} />
+          <div className="flex justify-end gap-2 mt-4">
+            <button onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">Cancel</button>
+            <button onClick={() => { onSave(client.id, actions); onClose(); }} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ── Resource Modal ───────────────────────────────────────────────────
+    function ResourceModal({ resource, onSave, onClose }) {
+      const blank = { code: '', name: '', rate: '', billableRate: '' };
+      const [form, setForm] = useState(resource ? { ...resource, rate: String(resource.rate), billableRate: String(resource.billableRate) } : blank);
+      const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+      const multiplier = form.rate && form.billableRate ? (Number(form.billableRate) / Number(form.rate)).toFixed(1) : '-';
+      return (
+        <Modal title={resource ? 'Edit Resource' : 'Add Resource'} onClose={onClose}>
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Code (2-4 chars)</label>
+            <input value={form.code} onChange={e => set('code', e.target.value.toUpperCase().slice(0, 4))} className="w-full border rounded px-3 py-2 text-sm" maxLength={4} />
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input value={form.name} onChange={e => set('name', e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Burden Rate ($/hr)</label>
+            <input type="number" value={form.rate} onChange={e => { set('rate', e.target.value); if (!resource) set('billableRate', String(Number(e.target.value) * 3)); }} className="w-full border rounded px-3 py-2 text-sm" />
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Billable Rate ($/hr) <span className="text-gray-400">Multiplier: {multiplier}x</span></label>
+            <input type="number" value={form.billableRate} onChange={e => set('billableRate', e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <button onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">Cancel</button>
+            <button onClick={() => { if (!form.code || !form.name) return; onSave({ ...form, rate: Number(form.rate) || 0, billableRate: Number(form.billableRate) || 0 }); }} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ── Activity Modal ───────────────────────────────────────────────────
+    function ActivityModal({ activity, resources, onSave, onClose }) {
+      const [name, setName] = useState(activity?.name || '');
+      const [rh, setRh] = useState(activity?.resourceHours || []);
+      const addRh = () => setRh(r => [...r, { resource: resources[0]?.code || '', hours: 1 }]);
+      const updateRh = (i, k, v) => setRh(r => r.map((x, j) => j === i ? { ...x, [k]: v } : x));
+      const removeRh = (i) => setRh(r => r.filter((_, j) => j !== i));
+      return (
+        <Modal title={activity ? 'Edit Activity' : 'Add Activity'} onClose={onClose}>
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Activity Name</label>
+            <input value={name} onChange={e => setName(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Resource Hours</label>
+            {rh.map((r, i) => (
+              <div key={i} className="flex gap-2 mb-2 items-center">
+                <select value={r.resource} onChange={e => updateRh(i, 'resource', e.target.value)} className="border rounded px-2 py-1 text-sm">
+                  {resources.map(res => <option key={res.code} value={res.code}>{res.code} - {res.name}</option>)}
+                </select>
+                <input type="number" value={r.hours} onChange={e => updateRh(i, 'hours', Number(e.target.value))} className="w-20 border rounded px-2 py-1 text-sm" min={0.5} step={0.5} />
+                <span className="text-sm text-gray-500">hrs</span>
+                <button onClick={() => removeRh(i)} className="text-red-500 text-sm hover:text-red-700">Remove</button>
+              </div>
+            ))}
+            <button onClick={addRh} className="text-sm text-blue-600 hover:text-blue-800">+ Add Resource</button>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <button onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">Cancel</button>
+            <button onClick={() => { if (!name) return; onSave({ id: activity?.id || Date.now(), name, resourceHours: rh }); }} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ── Dashboard Tab ────────────────────────────────────────────────────
+    function Dashboard({ enrichedClients }) {
+      const totalMRR = enrichedClients.reduce((s, c) => s + c.mrr, 0);
+      const avgMargin = enrichedClients.length ? enrichedClients.reduce((s, c) => s + c.margin, 0) / enrichedClients.length : 0;
+      const avgEff = enrichedClients.length ? enrichedClients.reduce((s, c) => s + c.efficiency, 0) / enrichedClients.length : 0;
+      const counts = { A: 0, B: 0, C: 0, D: 0 };
+      enrichedClients.forEach(c => counts[c.rating]++);
+      const total = enrichedClients.length || 1;
+      const abPct = ((counts.A + counts.B) / total * 100).toFixed(0);
+      const actionCoverage = enrichedClients.length ? (enrichedClients.filter(c => c.actions).length / total * 100).toFixed(0) : 0;
+      const wellFunded = enrichedClients.length ? (enrichedClients.filter(c => c.margin >= 0.6).length / total * 100).toFixed(0) : 0;
+      const atRisk = counts.C + counts.D;
+
+      const card = (label, value, color) => (
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-gray-500">{label}</div>
+          <div className={`text-2xl font-bold ${color || 'text-gray-800'}`}>{value}</div>
+        </div>
+      );
+
+      const ratingColors = { A: 'bg-green-500', B: 'bg-blue-500', C: 'bg-yellow-500', D: 'bg-red-500' };
+
+      return (
+        <div>
+          <h2 className="text-xl font-bold mb-4">Portfolio Dashboard</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {card('Total Clients', enrichedClients.length)}
+            {card('Monthly Recurring Revenue', formatCurrency(totalMRR), 'text-green-600')}
+            {card('Avg Margin', formatPct(avgMargin))}
+            {card('Avg Efficiency', avgEff.toFixed(2) + 'x')}
+          </div>
+          <h3 className="font-bold mb-3">Portfolio Health Scorecard</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {card('A+B Clients', abPct + '%', Number(abPct) >= 60 ? 'text-green-600' : 'text-yellow-600')}
+            {card('Action Plan Coverage', actionCoverage + '%', Number(actionCoverage) >= 80 ? 'text-green-600' : 'text-yellow-600')}
+            {card('Well Funded (60%+)', wellFunded + '%')}
+            {card('At Risk (C+D)', atRisk, atRisk > 0 ? 'text-red-600' : 'text-green-600')}
+          </div>
+          <h3 className="font-bold mb-3">Rating Distribution</h3>
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <div className="flex h-8 rounded overflow-hidden">
+              {['A', 'B', 'C', 'D'].map(r => counts[r] > 0 && (
+                <div key={r} className={`${ratingColors[r]} flex items-center justify-center text-white text-sm font-bold`} style={{ width: (counts[r] / total * 100) + '%' }}>{r}: {counts[r]}</div>
+              ))}
+            </div>
+          </div>
+          {atRisk > 0 && (
+            <div>
+              <h3 className="font-bold mb-3">Action Required</h3>
+              <div className="space-y-2">
+                {enrichedClients.filter(c => c.rating === 'C' || c.rating === 'D').map(c => (
+                  <div key={c.id} className={`p-3 rounded border-l-4 ${c.rating === 'D' ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'}`}>
+                    <span className="font-medium">{c.name}</span> <span className={`text-sm px-2 py-0.5 rounded ${c.rating === 'D' ? 'bg-red-200' : 'bg-yellow-200'}`}>{c.rating}</span>
+                    {c.actions && <p className="text-sm text-gray-600 mt-1">{c.actions}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Rating Tab ───────────────────────────────────────────────────────
+    function RatingTab({ enrichedClients, onEditClient, onDeleteClient, onEditActions, resources }) {
+      const [showModal, setShowModal] = useState(null); // 'add' | client obj
+      const [showActionModal, setShowActionModal] = useState(null);
+      const ratingBg = { A: 'bg-green-100 text-green-800', B: 'bg-blue-100 text-blue-800', C: 'bg-yellow-100 text-yellow-800', D: 'bg-red-100 text-red-800' };
+      return (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Client Ratings</h2>
+            <button onClick={() => setShowModal('add')} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">+ Add Client</button>
+          </div>
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-3">Client</th>
+                  <th className="p-3 text-center">Good Fit</th>
+                  <th className="p-3 text-center">Profitable</th>
+                  <th className="p-3 text-center">On Stack</th>
+                  <th className="p-3 text-center">Best Agmt</th>
+                  <th className="p-3 text-center">Rating</th>
+                  <th className="p-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {enrichedClients.map(c => (
+                  <tr key={c.id} className="border-t hover:bg-gray-50">
+                    <td className="p-3 font-medium">{c.name}</td>
+                    {[c.goodFit, c.profitable, c.onStack, c.bestAgreement].map((v, i) => (
+                      <td key={i} className="p-3 text-center">{v ? <span className="text-green-600 font-bold">&#10003;</span> : <span className="text-red-400">&#10007;</span>}</td>
+                    ))}
+                    <td className="p-3 text-center"><span className={`px-2 py-1 rounded text-xs font-bold ${ratingBg[c.rating]}`}>{c.rating}</span></td>
+                    <td className="p-3 text-center">
+                      <button onClick={() => setShowActionModal(c)} className="text-blue-600 hover:text-blue-800 text-xs mr-2">Plan</button>
+                      <button onClick={() => setShowModal(c)} className="text-gray-600 hover:text-gray-800 text-xs mr-2">Edit</button>
+                      <button onClick={() => onDeleteClient(c.id)} className="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {showModal && (
+            <ClientModal
+              client={showModal === 'add' ? null : showModal}
+              resources={resources}
+              onClose={() => setShowModal(null)}
+              onSave={(c) => { onEditClient(c); setShowModal(null); }}
+            />
+          )}
+          {showActionModal && (
+            <ActionPlanModal
+              client={showActionModal}
+              onClose={() => setShowActionModal(null)}
+              onSave={(id, actions) => onEditActions(id, actions)}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ── Segmentation Tab ─────────────────────────────────────────────────
+    function SegmentationTab({ enrichedClients, efficiencyThresholds, resources }) {
+      const avgBillableRate = resources.length ? resources.reduce((s, r) => s + r.billableRate, 0) / resources.length : 1;
+      return (
+        <div>
+          <h2 className="text-xl font-bold mb-4">Client Segmentation</h2>
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-3">Client</th>
+                  <th className="p-3 text-center">Rating</th>
+                  <th className="p-3 text-right">Labor Rev</th>
+                  <th className="p-3 text-center">Efficiency</th>
+                  <th className="p-3 text-center">Rev %</th>
+                  <th className="p-3 text-right">$ Allocation/mo</th>
+                  <th className="p-3 text-right">Budget Hrs/yr</th>
+                  <th className="p-3 text-center">Playbook</th>
+                </tr>
+              </thead>
+              <tbody>
+                {enrichedClients.map(c => {
+                  const effPct = c.efficiency >= efficiencyThresholds.high ? efficiencyThresholds.highPct
+                    : c.efficiency >= efficiencyThresholds.mid ? efficiencyThresholds.midPct
+                    : efficiencyThresholds.lowPct;
+                  const dollarAlloc = c.laborRevenue * effPct;
+                  const budgetHrsMonth = dollarAlloc / avgBillableRate;
+                  const budgetHrs = Math.round(budgetHrsMonth * 12);
+                  const playbookColors = { 'High Touch': 'bg-green-100 text-green-800', 'Mid Touch': 'bg-blue-100 text-blue-800', 'Low Touch': 'bg-gray-100 text-gray-800' };
+                  return (
+                    <tr key={c.id} className="border-t hover:bg-gray-50">
+                      <td className="p-3 font-medium">{c.name}</td>
+                      <td className="p-3 text-center"><span className={`px-2 py-0.5 rounded text-xs font-bold ${c.rating === 'A' ? 'bg-green-100 text-green-800' : c.rating === 'B' ? 'bg-blue-100 text-blue-800' : c.rating === 'C' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{c.rating}</span></td>
+                      <td className="p-3 text-right">{formatCurrency(c.laborRevenue)}</td>
+                      <td className="p-3 text-center">{c.efficiency.toFixed(2)}x</td>
+                      <td className="p-3 text-center">{(effPct * 100).toFixed(0)}%</td>
+                      <td className="p-3 text-right">{formatCurrency(Math.round(dollarAlloc))}</td>
+                      <td className="p-3 text-right">{budgetHrs}</td>
+                      <td className="p-3 text-center"><span className={`px-2 py-0.5 rounded text-xs font-medium ${playbookColors[c.playbook] || ''}`}>{c.playbook}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Playbooks Tab ────────────────────────────────────────────────────
+    function PlaybooksTab({ playbooks, setPlaybooks, activityCatalog, resources, enrichedClients, efficiencyThresholds }) {
+      const [activeTier, setActiveTier] = useState('High Touch');
+      const tiers = ['High Touch', 'Mid Touch', 'Low Touch'];
+      const currentAssignments = playbooks[activeTier]?.assignments || [];
+      const assignedIds = currentAssignments.map(a => a.activityId);
+
+      const toggleActivity = (actId) => {
+        setPlaybooks(p => {
+          const tier = { ...p[activeTier] };
+          if (assignedIds.includes(actId)) {
+            tier.assignments = tier.assignments.filter(a => a.activityId !== actId);
+          } else {
+            tier.assignments = [...tier.assignments, { activityId: actId, frequency: 1 }];
+          }
+          return { ...p, [activeTier]: tier };
+        });
+      };
+
+      const setFrequency = (actId, freq) => {
+        setPlaybooks(p => {
+          const tier = { ...p[activeTier] };
+          tier.assignments = tier.assignments.map(a => a.activityId === actId ? { ...a, frequency: Number(freq) } : a);
+          return { ...p, [activeTier]: tier };
+        });
+      };
+
+      const calcMetrics = () => {
+        let totalHours = 0, totalCost = 0;
+        const details = [];
+        currentAssignments.forEach(a => {
+          const act = activityCatalog.find(ac => ac.id === a.activityId);
+          if (!act) return;
+          const resourceCosts = act.resourceHours.map(rh => {
+            const res = resources.find(r => r.code === rh.resource);
+            const annualHours = rh.hours * a.frequency;
+            const cost = annualHours * (res?.rate || 0);
+            return { code: rh.resource, hours: rh.hours, annualHours, rate: res?.rate || 0, billableRate: res?.billableRate || 0, cost };
+          });
+          const actHours = resourceCosts.reduce((s, r) => s + r.annualHours, 0);
+          const actCost = resourceCosts.reduce((s, r) => s + r.cost, 0);
+          totalHours += actHours;
+          totalCost += actCost;
+          details.push({ activity: act.name, frequency: a.frequency, resourceCosts, totalHours: actHours, totalCost: actCost });
+        });
+        return { totalHours, totalCost, details };
+      };
+
+      const metrics = calcMetrics();
+      const avgBillableRate = resources.length ? resources.reduce((s, r) => s + r.billableRate, 0) / resources.length : 1;
+      const tierClients = enrichedClients.filter(c => c.playbook === activeTier);
+
+      return (
+        <div>
+          <h2 className="text-xl font-bold mb-4">Playbook Designer</h2>
+          <div className="flex gap-2 mb-4">
+            {tiers.map(t => (
+              <button key={t} onClick={() => setActiveTier(t)} className={`px-4 py-2 rounded text-sm font-medium ${activeTier === t ? 'bg-blue-600 text-white' : 'bg-white border hover:bg-gray-50'}`}>{t}</button>
+            ))}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-4 text-center">
+              <div className="text-sm text-gray-500">Activities</div>
+              <div className="text-2xl font-bold">{currentAssignments.length}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 text-center">
+              <div className="text-sm text-gray-500">Annual Hours</div>
+              <div className="text-2xl font-bold">{metrics.totalHours}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 text-center">
+              <div className="text-sm text-gray-500">Annual Cost (Burden)</div>
+              <div className="text-2xl font-bold">{formatCurrency(metrics.totalCost)}</div>
+            </div>
+          </div>
+
+          <h3 className="font-bold mb-3">Activity Catalog</h3>
+          <div className="bg-white rounded-lg shadow mb-6">
+            {activityCatalog.map(act => {
+              const assigned = assignedIds.includes(act.id);
+              const assignment = currentAssignments.find(a => a.activityId === act.id);
+              return (
+                <div key={act.id} className={`p-3 border-b flex items-center justify-between ${assigned ? 'bg-blue-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => toggleActivity(act.id)} className={`w-6 h-6 rounded border flex items-center justify-center text-sm ${assigned ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-300'}`}>
+                      {assigned ? '✓' : '○'}
+                    </button>
+                    <div>
+                      <div className="font-medium text-sm">{act.name}</div>
+                      <div className="text-xs text-gray-500">{act.resourceHours.map(r => `${r.resource}: ${r.hours}h`).join(', ')}</div>
+                    </div>
+                  </div>
+                  {assigned && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">Freq/yr:</label>
+                      <input type="number" value={assignment.frequency} onChange={e => setFrequency(act.id, e.target.value)} className="w-16 border rounded px-2 py-1 text-sm text-center" min={1} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {metrics.details.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-bold mb-3">Resource Breakdown</h3>
+              {metrics.details.map((d, i) => (
+                <div key={i} className="bg-white rounded-lg shadow p-4 mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium text-sm">{d.activity}</span>
+                    <span className="text-xs text-gray-500">{d.frequency}x/yr | {d.totalHours} hrs | {formatCurrency(d.totalCost)}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {d.resourceCosts.map((r, j) => (
+                      <div key={j} className="text-xs text-gray-600 pl-4">
+                        {r.code}: {r.hours}h &times; {d.frequency}x &times; ${r.rate}/hr = {formatCurrency(r.cost)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <h3 className="font-bold mb-3">Assigned Clients ({tierClients.length})</h3>
+          {tierClients.length === 0 ? (
+            <p className="text-sm text-gray-500">No clients assigned to this playbook tier.</p>
+          ) : (
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left p-3">Client</th>
+                    <th className="p-3 text-center">Rating</th>
+                    <th className="p-3 text-right">Budget Hrs</th>
+                    <th className="p-3 text-right">Plan Hrs</th>
+                    <th className="p-3 text-right">Variance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tierClients.map(c => {
+                    const effPct = c.efficiency >= efficiencyThresholds.high ? efficiencyThresholds.highPct
+                      : c.efficiency >= efficiencyThresholds.mid ? efficiencyThresholds.midPct
+                      : efficiencyThresholds.lowPct;
+                    const budgetHrs = Math.round((c.laborRevenue * effPct / avgBillableRate) * 12);
+                    const planHrs = metrics.totalHours;
+                    const variance = budgetHrs - planHrs;
+                    return (
+                      <tr key={c.id} className="border-t">
+                        <td className="p-3 font-medium">{c.name}</td>
+                        <td className="p-3 text-center">{c.rating}</td>
+                        <td className="p-3 text-right">{budgetHrs}</td>
+                        <td className="p-3 text-right">{planHrs}</td>
+                        <td className={`p-3 text-right font-medium ${variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{variance >= 0 ? '+' : ''}{variance}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Settings Tab ─────────────────────────────────────────────────────
+    function SettingsTab({ targetMargin, setTargetMargin, targetEfficiency, setTargetEfficiency, efficiencyThresholds, setEfficiencyThresholds, resources, setResources, activityCatalog, setActivityCatalog }) {
+      const [showResourceModal, setShowResourceModal] = useState(null);
+      const [showActivityModal, setShowActivityModal] = useState(null);
+
+      const saveResource = (res) => {
+        setResources(rs => {
+          const idx = rs.findIndex(r => r.code === res.code);
+          if (idx >= 0) return rs.map((r, i) => i === idx ? res : r);
+          return [...rs, res];
+        });
+        setShowResourceModal(null);
+      };
+
+      const deleteResource = (code) => {
+        setResources(rs => rs.filter(r => r.code !== code));
+      };
+
+      const saveActivity = (act) => {
+        setActivityCatalog(as => {
+          const idx = as.findIndex(a => a.id === act.id);
+          if (idx >= 0) return as.map((a, i) => i === idx ? act : a);
+          return [...as, act];
+        });
+        setShowActivityModal(null);
+      };
+
+      const deleteActivity = (id) => {
+        setActivityCatalog(as => as.filter(a => a.id !== id));
+      };
+
+      return (
+        <div>
+          <h2 className="text-xl font-bold mb-4">Settings & Configuration</h2>
+
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <h3 className="font-bold mb-3">Profitability Thresholds</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Target Margin</label>
+                <input type="number" value={targetMargin} onChange={e => setTargetMargin(Number(e.target.value))} className="w-full border rounded px-3 py-2 text-sm" step={0.01} />
+                <p className="text-xs text-gray-500 mt-1">Clients at or above this margin are considered profitable</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Target Efficiency</label>
+                <input type="number" value={targetEfficiency} onChange={e => setTargetEfficiency(Number(e.target.value))} className="w-full border rounded px-3 py-2 text-sm" step={0.01} />
+                <p className="text-xs text-gray-500 mt-1">Clients at or above this efficiency are considered profitable</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <h3 className="font-bold mb-3">Efficiency Ratio Thresholds</h3>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">High Efficiency (&ge;)</label>
+                <input type="number" value={efficiencyThresholds.high} onChange={e => setEfficiencyThresholds(t => ({ ...t, high: Number(e.target.value) }))} className="w-full border rounded px-3 py-2 text-sm" step={0.01} />
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">Revenue % Allocation</label>
+                <input type="number" value={(efficiencyThresholds.highPct * 100)} onChange={e => setEfficiencyThresholds(t => ({ ...t, highPct: Number(e.target.value) / 100 }))} className="w-full border rounded px-3 py-2 text-sm" step={1} />
+                <p className="text-xs text-gray-500 mt-1">Currently: {(efficiencyThresholds.highPct * 100).toFixed(0)}%</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mid Efficiency (&ge;)</label>
+                <input type="number" value={efficiencyThresholds.mid} onChange={e => setEfficiencyThresholds(t => ({ ...t, mid: Number(e.target.value) }))} className="w-full border rounded px-3 py-2 text-sm" step={0.01} />
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">Revenue % Allocation</label>
+                <input type="number" value={(efficiencyThresholds.midPct * 100)} onChange={e => setEfficiencyThresholds(t => ({ ...t, midPct: Number(e.target.value) / 100 }))} className="w-full border rounded px-3 py-2 text-sm" step={1} />
+                <p className="text-xs text-gray-500 mt-1">Currently: {(efficiencyThresholds.midPct * 100).toFixed(0)}%</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Low Efficiency (&lt; Mid)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-8">Revenue % Allocation</label>
+                <input type="number" value={(efficiencyThresholds.lowPct * 100)} onChange={e => setEfficiencyThresholds(t => ({ ...t, lowPct: Number(e.target.value) / 100 }))} className="w-full border rounded px-3 py-2 text-sm" step={1} />
+                <p className="text-xs text-gray-500 mt-1">Currently: {(efficiencyThresholds.lowPct * 100).toFixed(0)}%</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold">Resource Catalog</h3>
+              <button onClick={() => setShowResourceModal('add')} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700">+ Add Resource</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left p-2">Code</th>
+                    <th className="text-left p-2">Name</th>
+                    <th className="p-2 text-right">Burden Rate</th>
+                    <th className="p-2 text-right">Billable Rate</th>
+                    <th className="p-2 text-right">Multiplier</th>
+                    <th className="p-2 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resources.map(r => (
+                    <tr key={r.code} className="border-t">
+                      <td className="p-2 font-mono">{r.code}</td>
+                      <td className="p-2">{r.name}</td>
+                      <td className="p-2 text-right">${r.rate}/hr</td>
+                      <td className="p-2 text-right">${r.billableRate}/hr</td>
+                      <td className="p-2 text-right">{(r.billableRate / r.rate).toFixed(1)}x</td>
+                      <td className="p-2 text-center">
+                        <button onClick={() => setShowResourceModal(r)} className="text-gray-600 hover:text-gray-800 text-xs mr-2">Edit</button>
+                        <button onClick={() => deleteResource(r.code)} className="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold">Touch Plan Activity Catalog</h3>
+              <button onClick={() => setShowActivityModal('add')} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700">+ Add Activity</button>
+            </div>
+            <div className="space-y-2">
+              {activityCatalog.map(act => (
+                <div key={act.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium text-sm">{act.name}</div>
+                    <div className="text-xs text-gray-500">{act.resourceHours.map(r => `${r.resource}: ${r.hours}h`).join(', ')}</div>
+                  </div>
+                  <div>
+                    <button onClick={() => setShowActivityModal(act)} className="text-gray-600 hover:text-gray-800 text-xs mr-2">Edit</button>
+                    <button onClick={() => deleteActivity(act.id)} className="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {showResourceModal && (
+            <ResourceModal
+              resource={showResourceModal === 'add' ? null : showResourceModal}
+              onClose={() => setShowResourceModal(null)}
+              onSave={saveResource}
+            />
+          )}
+          {showActivityModal && (
+            <ActivityModal
+              activity={showActivityModal === 'add' ? null : showActivityModal}
+              resources={resources}
+              onClose={() => setShowActivityModal(null)}
+              onSave={saveActivity}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ── Main App ─────────────────────────────────────────────────────────
+    function App() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [clients, setClients] = useState(defaultClients);
+      const [resources, setResources] = useState(defaultResources);
+      const [activityCatalog, setActivityCatalog] = useState(defaultActivityCatalog);
+      const [playbooks, setPlaybooks] = useState(defaultPlaybooks);
+      const [targetMargin, setTargetMargin] = useState(0.60);
+      const [targetEfficiency, setTargetEfficiency] = useState(1.0);
+      const [efficiencyThresholds, setEfficiencyThresholds] = useState({ high: 1.2, mid: 1.0, highPct: 0.10, midPct: 0.07, lowPct: 0.05 });
+
+      const enrichedClients = useMemo(() => {
+        return clients.map(c => {
+          const profitable = c.margin >= targetMargin || c.efficiency >= targetEfficiency;
+          const yesCount = [c.goodFit, profitable, c.onStack, c.bestAgreement].filter(Boolean).length;
+          const rating = yesCount === 4 ? 'A' : yesCount === 3 ? 'B' : yesCount === 2 ? 'C' : 'D';
+          let playbook;
+          if (c.bestAgreement && !c.overrideBestAgreement) {
+            playbook = 'High Touch';
+          } else if (c.efficiency >= efficiencyThresholds.high) {
+            playbook = 'High Touch';
+          } else if (c.efficiency >= efficiencyThresholds.mid) {
+            playbook = 'Mid Touch';
+          } else {
+            playbook = 'Low Touch';
+          }
+          return { ...c, profitable, rating, playbook };
+        });
+      }, [clients, targetMargin, targetEfficiency, efficiencyThresholds]);
+
+      const handleEditClient = (updated) => {
+        setClients(cs => {
+          const idx = cs.findIndex(c => c.id === updated.id);
+          if (idx >= 0) return cs.map((c, i) => i === idx ? updated : c);
+          return [...cs, updated];
+        });
+      };
+
+      const handleDeleteClient = (id) => {
+        setClients(cs => cs.filter(c => c.id !== id));
+      };
+
+      const handleEditActions = (id, actions) => {
+        setClients(cs => cs.map(c => c.id === id ? { ...c, actions } : c));
+      };
+
+      const tabs = [
+        { key: 'dashboard', label: 'Dashboard' },
+        { key: 'rating', label: 'Rating' },
+        { key: 'segmentation', label: 'Segmentation' },
+        { key: 'playbooks', label: 'Playbooks' },
+        { key: 'settings', label: 'Settings' },
+      ];
+
+      return (
+        <div className="min-h-screen">
+          <header className="bg-white shadow">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <h1 className="text-2xl font-bold text-gray-800">MSP Account Management Platform</h1>
+              <p className="text-sm text-gray-500">Portfolio management, client rating, and playbook design</p>
+            </div>
+          </header>
+          <nav className="bg-white border-b">
+            <div className="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto">
+              {tabs.map(t => (
+                <button key={t.key} onClick={() => setActiveTab(t.key)} className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${activeTab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>{t.label}</button>
+              ))}
+            </div>
+          </nav>
+          <main className="max-w-7xl mx-auto px-4 py-6">
+            {activeTab === 'dashboard' && <Dashboard enrichedClients={enrichedClients} />}
+            {activeTab === 'rating' && <RatingTab enrichedClients={enrichedClients} onEditClient={handleEditClient} onDeleteClient={handleDeleteClient} onEditActions={handleEditActions} resources={resources} />}
+            {activeTab === 'segmentation' && <SegmentationTab enrichedClients={enrichedClients} efficiencyThresholds={efficiencyThresholds} resources={resources} />}
+            {activeTab === 'playbooks' && <PlaybooksTab playbooks={playbooks} setPlaybooks={setPlaybooks} activityCatalog={activityCatalog} resources={resources} enrichedClients={enrichedClients} efficiencyThresholds={efficiencyThresholds} />}
+            {activeTab === 'settings' && <SettingsTab targetMargin={targetMargin} setTargetMargin={setTargetMargin} targetEfficiency={targetEfficiency} setTargetEfficiency={setTargetEfficiency} efficiencyThresholds={efficiencyThresholds} setEfficiencyThresholds={setEfficiencyThresholds} resources={resources} setResources={setResources} activityCatalog={activityCatalog} setActivityCatalog={setActivityCatalog} />}
+          </main>
+          <footer className="text-center text-xs text-gray-400 py-4">MSP Account Management Platform v1.0.0</footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
