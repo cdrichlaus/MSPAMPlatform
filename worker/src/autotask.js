@@ -55,6 +55,20 @@ async function fetchAllPages(url, headers) {
 }
 
 /**
+ * Build an OR filter for multiple IDs on a given field.
+ * Autotask REST API format: { filter: [ { op: 'or', items: [ {op:'eq',field,value}, ... ] } ] }
+ */
+function buildOrFilter(field, ids, additionalFilters = []) {
+  const orItems = ids.map(id => ({ op: 'eq', field, value: id }));
+  return {
+    filter: [
+      ...additionalFilters,
+      { op: 'or', items: orItems }
+    ]
+  };
+}
+
+/**
  * Route Autotask API requests
  */
 export async function handleAutotask(path, request, env) {
@@ -142,16 +156,16 @@ export async function handleAutotask(path, request, env) {
     return jsonResponse(picklists);
   }
 
-  // Batch resolve contacts
+  // Batch resolve contacts - fetch one at a time to avoid OR filter issues
   if (path === '/api/autotask/contacts') {
     const body = await request.json();
     const ids = body.ids || [];
     const contactMap = {};
 
+    // Fetch in batches using proper OR filter format
     for (let i = 0; i < ids.length; i += 50) {
       const batch = ids.slice(i, i + 50);
-      const filter = batch.map(id => ({ op: 'eq', field: 'id', value: id }));
-      const search = JSON.stringify({ filter, op: 'or' });
+      const search = JSON.stringify(buildOrFilter('id', batch));
       const url = `${creds.baseUrl}/v1.0/Contacts/query?search=${encodeURIComponent(search)}`;
 
       try {
@@ -159,8 +173,22 @@ export async function handleAutotask(path, request, env) {
         for (const contact of items) {
           contactMap[contact.id] = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || `Contact #${contact.id}`;
         }
-      } catch {
-        batch.forEach(id => { contactMap[id] = contactMap[id] || `Contact #${id}`; });
+      } catch (err) {
+        // If OR filter fails, fall back to fetching one by one
+        for (const id of batch) {
+          if (contactMap[id]) continue;
+          try {
+            const singleSearch = JSON.stringify({ filter: [{ op: 'eq', field: 'id', value: id }] });
+            const singleUrl = `${creds.baseUrl}/v1.0/Contacts/query?search=${encodeURIComponent(singleSearch)}`;
+            const items = await fetchAllPages(singleUrl, headers);
+            if (items.length > 0) {
+              const c = items[0];
+              contactMap[c.id] = `${c.firstName || ''} ${c.lastName || ''}`.trim() || `Contact #${c.id}`;
+            }
+          } catch {
+            contactMap[id] = `Contact #${id}`;
+          }
+        }
       }
     }
 
@@ -175,8 +203,7 @@ export async function handleAutotask(path, request, env) {
 
     for (let i = 0; i < ids.length; i += 50) {
       const batch = ids.slice(i, i + 50);
-      const filter = batch.map(id => ({ op: 'eq', field: 'id', value: id }));
-      const search = JSON.stringify({ filter, op: 'or' });
+      const search = JSON.stringify(buildOrFilter('id', batch));
       const url = `${creds.baseUrl}/v1.0/ConfigurationItems/query?search=${encodeURIComponent(search)}`;
 
       try {
@@ -185,7 +212,21 @@ export async function handleAutotask(path, request, env) {
           ciMap[ci.id] = ci.referenceTitle || ci.rmmDeviceAuditDescription || `CI #${ci.id}`;
         }
       } catch {
-        batch.forEach(id => { ciMap[id] = ciMap[id] || `CI #${id}`; });
+        // Fall back to one-by-one
+        for (const id of batch) {
+          if (ciMap[id]) continue;
+          try {
+            const singleSearch = JSON.stringify({ filter: [{ op: 'eq', field: 'id', value: id }] });
+            const singleUrl = `${creds.baseUrl}/v1.0/ConfigurationItems/query?search=${encodeURIComponent(singleSearch)}`;
+            const items = await fetchAllPages(singleUrl, headers);
+            if (items.length > 0) {
+              const ci = items[0];
+              ciMap[ci.id] = ci.referenceTitle || ci.rmmDeviceAuditDescription || `CI #${ci.id}`;
+            }
+          } catch {
+            ciMap[id] = `CI #${id}`;
+          }
+        }
       }
     }
 
@@ -195,24 +236,20 @@ export async function handleAutotask(path, request, env) {
   // Fetch time entries (for ticket variance and profitability)
   if (path === '/api/autotask/timeentries') {
     const body = request.method === 'POST' ? await request.json() : {};
-    const filter = [];
+    const dateFilters = [];
 
     if (body.dateFrom) {
-      filter.push({ op: 'gte', field: 'dateWorked', value: body.dateFrom });
+      dateFilters.push({ op: 'gte', field: 'dateWorked', value: body.dateFrom });
     }
     if (body.dateTo) {
-      filter.push({ op: 'lte', field: 'dateWorked', value: body.dateTo });
+      dateFilters.push({ op: 'lte', field: 'dateWorked', value: body.dateTo });
     }
+
     if (body.ticketIds && body.ticketIds.length > 0) {
-      // Fetch time entries for specific tickets in batches
       const allEntries = [];
       for (let i = 0; i < body.ticketIds.length; i += 50) {
         const batch = body.ticketIds.slice(i, i + 50);
-        const batchFilter = [...filter];
-        const ticketFilter = batch.map(id => ({ op: 'eq', field: 'ticketID', value: id }));
-        const search = JSON.stringify({
-          filter: [...batchFilter, { items: ticketFilter, op: 'or' }]
-        });
+        const search = JSON.stringify(buildOrFilter('ticketID', batch, dateFilters));
         const url = `${creds.baseUrl}/v1.0/TimeEntries/query?search=${encodeURIComponent(search)}`;
         try {
           const items = await fetchAllPages(url, headers);
@@ -228,11 +265,7 @@ export async function handleAutotask(path, request, env) {
       const allEntries = [];
       for (let i = 0; i < body.contractIds.length; i += 50) {
         const batch = body.contractIds.slice(i, i + 50);
-        const batchFilter = [...filter];
-        const contractFilter = batch.map(id => ({ op: 'eq', field: 'contractID', value: id }));
-        const search = JSON.stringify({
-          filter: [...batchFilter, { items: contractFilter, op: 'or' }]
-        });
+        const search = JSON.stringify(buildOrFilter('contractID', batch, dateFilters));
         const url = `${creds.baseUrl}/v1.0/TimeEntries/query?search=${encodeURIComponent(search)}`;
         try {
           const items = await fetchAllPages(url, headers);
@@ -245,6 +278,7 @@ export async function handleAutotask(path, request, env) {
     }
 
     // Default: date-filtered time entries
+    const filter = [...dateFilters];
     if (filter.length === 0) {
       const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       filter.push({ op: 'gte', field: 'dateWorked', value: ninetyDaysAgo });
@@ -256,7 +290,7 @@ export async function handleAutotask(path, request, env) {
     return jsonResponse({ items, count: items.length });
   }
 
-  // Fetch contracts (with optional company/LOB filter)
+  // Fetch contracts (with optional company filter)
   if (path === '/api/autotask/contracts') {
     const body = request.method === 'POST' ? await request.json() : {};
     const filter = [];
@@ -264,14 +298,9 @@ export async function handleAutotask(path, request, env) {
     if (body.companyId) {
       filter.push({ op: 'eq', field: 'companyID', value: parseInt(body.companyId) });
     }
-    if (body.status !== undefined) {
-      filter.push({ op: 'eq', field: 'status', value: parseInt(body.status) });
-    }
 
-    // Default: active contracts
-    if (!body.companyId && filter.length === 0) {
-      filter.push({ op: 'eq', field: 'status', value: 1 }); // 1 = Active
-    }
+    // Always include active status filter
+    filter.push({ op: 'eq', field: 'status', value: 1 }); // 1 = Active
 
     const search = JSON.stringify({ filter });
     const url = `${creds.baseUrl}/v1.0/Contracts/query?search=${encodeURIComponent(search)}`;
@@ -338,28 +367,54 @@ export async function handleAutotask(path, request, env) {
     return jsonResponse({ items: roles });
   }
 
-  // Fetch business divisions/subdivisions (Lines of Business)
+  // Fetch Lines of Business from contract data
+  // Extracts unique businessDivisionSubdivisionID values from contracts
   if (path === '/api/autotask/businessdivisions') {
-    const search = JSON.stringify({
-      filter: [{ op: 'eq', field: 'isActive', value: true }]
-    });
-    const url = `${creds.baseUrl}/v1.0/BusinessSubdivisions/query?search=${encodeURIComponent(search)}`;
+    // Try BusinessDivisionSubdivisions entity first (Autotask REST API v1.0)
+    const entityNames = [
+      'BusinessDivisionSubdivisions',
+      'BusinessSubdivisions',
+      'BusinessDivisions'
+    ];
+
+    for (const entity of entityNames) {
+      try {
+        const search = JSON.stringify({
+          filter: [{ op: 'gte', field: 'id', value: 0 }]
+        });
+        const url = `${creds.baseUrl}/v1.0/${entity}/query?search=${encodeURIComponent(search)}`;
+        const items = await fetchAllPages(url, headers);
+        const lobs = items
+          .map(d => ({
+            id: d.id,
+            name: d.name || d.divisionName || d.description || `LOB #${d.id}`
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        return jsonResponse({ items: lobs });
+      } catch {
+        // Try next entity name
+        continue;
+      }
+    }
+
+    // If all entity queries fail, extract LOBs from active contracts
     try {
-      const items = await fetchAllPages(url, headers);
-      const lobs = items.map(d => ({
-        id: d.id,
-        name: d.name || d.description || `LOB #${d.id}`
-      })).sort((a, b) => a.name.localeCompare(b.name));
+      const search = JSON.stringify({
+        filter: [{ op: 'eq', field: 'status', value: 1 }]
+      });
+      const url = `${creds.baseUrl}/v1.0/Contracts/query?search=${encodeURIComponent(search)}`;
+      const contracts = await fetchAllPages(url, headers);
+
+      const lobIds = [...new Set(
+        contracts
+          .map(c => c.businessDivisionSubdivisionID)
+          .filter(Boolean)
+      )];
+
+      const lobs = lobIds.map(id => ({ id, name: `Line of Business #${id}` }));
       return jsonResponse({ items: lobs });
     } catch {
-      // BusinessSubdivisions might not exist, try BusinessDivisions
-      const url2 = `${creds.baseUrl}/v1.0/BusinessDivisions/query?search=${encodeURIComponent(search)}`;
-      const items = await fetchAllPages(url2, headers);
-      const lobs = items.map(d => ({
-        id: d.id,
-        name: d.name || d.description || `LOB #${d.id}`
-      })).sort((a, b) => a.name.localeCompare(b.name));
-      return jsonResponse({ items: lobs });
+      return jsonResponse({ items: [] });
     }
   }
 
