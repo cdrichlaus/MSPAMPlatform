@@ -185,11 +185,10 @@ fetchProfBtn.addEventListener('click', async () => {
     const resources = resourceResult.items || [];
     const roles = roleResult.items || [];
 
-    // Filter by LOB if selected
+    // Filter by LOB (organizationalLevelAssociationID) if selected
     if (lobId) {
       contracts = contracts.filter(c =>
-        c.businessDivisionSubdivisionID == lobId ||
-        c.businessDivisionID == lobId
+        c.organizationalLevelAssociationID == lobId
       );
     }
 

@@ -368,14 +368,15 @@ export async function handleAutotask(path, request, env) {
   }
 
   // Fetch Lines of Business (Billing): "Division > Subdivision"
-  // Joins BusinessDivisions + BusinessSubdivisions via BusinessDivisionSubdivisions
+  // The LOB field on contracts/tickets is organizationalLevelAssociationID
+  // which references OrganizationalLevelAssociations (joins Division + Subdivision)
   if (path === '/api/autotask/businessdivisions') {
     const allFilter = JSON.stringify({ filter: [{ op: 'gte', field: 'id', value: 0 }] });
 
     try {
-      // Fetch all three entities in parallel
-      const [joinItems, divItems, subItems] = await Promise.all([
-        fetchAllPages(`${creds.baseUrl}/v1.0/BusinessDivisionSubdivisions/query?search=${encodeURIComponent(allFilter)}`, headers),
+      // Fetch OrganizationalLevelAssociations + parent entities in parallel
+      const [olaItems, divItems, subItems] = await Promise.all([
+        fetchAllPages(`${creds.baseUrl}/v1.0/OrganizationalLevelAssociations/query?search=${encodeURIComponent(allFilter)}`, headers),
         fetchAllPages(`${creds.baseUrl}/v1.0/BusinessDivisions/query?search=${encodeURIComponent(allFilter)}`, headers),
         fetchAllPages(`${creds.baseUrl}/v1.0/BusinessSubdivisions/query?search=${encodeURIComponent(allFilter)}`, headers)
       ]);
@@ -386,15 +387,16 @@ export async function handleAutotask(path, request, env) {
       const subMap = {};
       subItems.forEach(s => { subMap[s.id] = s.name || s.subdivisionName || `Subdivision #${s.id}`; });
 
-      // Join: each BusinessDivisionSubdivision has businessDivisionID + businessSubdivisionID
-      const lobs = joinItems.map(j => {
-        const divName = divMap[j.businessDivisionID] || `Division #${j.businessDivisionID}`;
-        const subName = subMap[j.businessSubdivisionID] || `Subdivision #${j.businessSubdivisionID}`;
+      // Each OLA has businessDivisionID + businessSubdivisionID
+      const lobs = olaItems.map(ola => {
+        const divName = divMap[ola.businessDivisionID] || '';
+        const subName = subMap[ola.businessSubdivisionID] || '';
+        const name = [divName, subName].filter(Boolean).join(' > ') || `LOB #${ola.id}`;
         return {
-          id: j.id,
-          name: `${divName} > ${subName}`,
-          divisionId: j.businessDivisionID,
-          subdivisionId: j.businessSubdivisionID
+          id: ola.id,
+          name,
+          divisionId: ola.businessDivisionID,
+          subdivisionId: ola.businessSubdivisionID
         };
       }).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -407,7 +409,7 @@ export async function handleAutotask(path, request, env) {
         const contracts = await fetchAllPages(url, headers);
 
         const lobIds = [...new Set(
-          contracts.map(c => c.businessDivisionSubdivisionID).filter(Boolean)
+          contracts.map(c => c.organizationalLevelAssociationID).filter(Boolean)
         )];
 
         const lobs = lobIds.map(id => ({ id, name: `Line of Business #${id}` }));
