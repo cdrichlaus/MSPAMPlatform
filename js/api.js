@@ -83,6 +83,16 @@ export async function testLLMConnection() {
 }
 
 /**
+ * Fetch all active companies (for dropdown)
+ */
+export async function fetchCompanies() {
+  return proxyFetch('/api/autotask/companies', {
+    method: 'POST',
+    headers: autotaskHeaders()
+  });
+}
+
+/**
  * Fetch tickets from Autotask (with optional filters)
  */
 export async function fetchTickets(filters = {}) {
@@ -122,6 +132,68 @@ export async function fetchConfigItems(ids) {
     method: 'POST',
     headers: autotaskHeaders(),
     body: JSON.stringify({ ids })
+  });
+}
+
+/**
+ * Fetch time entries with filters
+ */
+export async function fetchTimeEntries(filters = {}) {
+  return proxyFetch('/api/autotask/timeentries', {
+    method: 'POST',
+    headers: autotaskHeaders(),
+    body: JSON.stringify(filters)
+  });
+}
+
+/**
+ * Fetch contracts with optional company/status filter
+ */
+export async function fetchContracts(filters = {}) {
+  return proxyFetch('/api/autotask/contracts', {
+    method: 'POST',
+    headers: autotaskHeaders(),
+    body: JSON.stringify(filters)
+  });
+}
+
+/**
+ * Fetch contract picklists (contract type, status, etc.)
+ */
+export async function fetchContractPicklists() {
+  return proxyFetch('/api/autotask/contractpicklists', {
+    method: 'POST',
+    headers: autotaskHeaders()
+  });
+}
+
+/**
+ * Fetch active resources (for cost rates)
+ */
+export async function fetchResources() {
+  return proxyFetch('/api/autotask/resources', {
+    method: 'POST',
+    headers: autotaskHeaders()
+  });
+}
+
+/**
+ * Fetch active roles (for billing rates)
+ */
+export async function fetchRoles() {
+  return proxyFetch('/api/autotask/roles', {
+    method: 'POST',
+    headers: autotaskHeaders()
+  });
+}
+
+/**
+ * Fetch business divisions/subdivisions (Lines of Business)
+ */
+export async function fetchBusinessDivisions() {
+  return proxyFetch('/api/autotask/businessdivisions', {
+    method: 'POST',
+    headers: autotaskHeaders()
   });
 }
 

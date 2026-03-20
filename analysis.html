@@ -86,6 +86,11 @@
           <i class="bi bi-graph-up-arrow me-1"></i>Trends
         </button>
       </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabProfitability" type="button">
+          <i class="bi bi-currency-dollar me-1"></i>Profitability
+        </button>
+      </li>
     </ul>
 
     <div class="tab-content py-3">
@@ -103,6 +108,7 @@
                   <li>Which contacts submit the most tickets?</li>
                   <li>Show me ticket trends by month</li>
                   <li>Which configuration items generate the most issues?</li>
+                  <li>Which issue types have the worst time variance?</li>
                 </ul>
               </div>
             </div>
@@ -122,13 +128,13 @@
         <div class="row g-4">
           <div class="col-lg-7">
             <div class="chart-panel">
-              <h5>Ticket Type Hierarchy</h5>
+              <h5>Time Variance by Issue Type (Estimated vs Actual)</h5>
               <canvas id="typeTreemap" height="400"></canvas>
             </div>
           </div>
           <div class="col-lg-5">
-            <div class="chart-panel" style="max-height: 500px; overflow-y: auto;">
-              <h5>Type / Issue / Sub-Issue</h5>
+            <div class="chart-panel" style="max-height: 600px; overflow-y: auto;">
+              <h5>Type / Issue / Sub-Issue - Time Variance</h5>
               <div id="typeTable">
                 <p class="text-muted">Fetch data to populate this view.</p>
               </div>
@@ -182,6 +188,82 @@
         <div class="chart-panel">
           <h5>Ticket Volume Over Time</h5>
           <canvas id="trendChart" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Profitability -->
+      <div class="tab-pane fade" id="tabProfitability">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="profCompany" class="form-label form-label-sm mb-1">Company</label>
+            <select class="form-select form-select-sm" id="profCompany">
+              <option value="">All Companies</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="profLOB" class="form-label form-label-sm mb-1">Line of Business</label>
+            <select class="form-select form-select-sm" id="profLOB">
+              <option value="">All Lines of Business</option>
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary btn-sm" id="fetchProfBtn">
+              <i class="bi bi-calculator me-1"></i>Calculate Profitability
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4" id="profKPIs" style="display:none;">
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body py-3">
+                <div class="text-muted small">Contracts</div>
+                <div class="fs-3 fw-bold" id="kpiContracts">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body py-3">
+                <div class="text-muted small">Avg Gross Margin %</div>
+                <div class="fs-3 fw-bold" id="kpiMargin">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body py-3">
+                <div class="text-muted small">Avg Effective Rate</div>
+                <div class="fs-3 fw-bold" id="kpiEffRate">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body py-3">
+                <div class="text-muted small">Avg Effective Ratio</div>
+                <div class="fs-3 fw-bold" id="kpiEffRatio">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="chart-panel">
+              <h5>Contract Profitability</h5>
+              <canvas id="profChart" height="400"></canvas>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="chart-panel" style="max-height: 600px; overflow-y: auto;">
+              <h5>Contract Details</h5>
+              <div id="profTable">
+                <p class="text-muted">Select a company and click Calculate Profitability.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
