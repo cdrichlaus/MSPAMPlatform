@@ -1,0 +1,161 @@
+/* Autotask Ticket Analysis Dashboard - Custom Styles */
+
+:root {
+  --at-primary: #0d6efd;
+  --at-sidebar-bg: #212529;
+  --at-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+body {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Settings cards */
+.settings-card {
+  box-shadow: var(--at-card-shadow);
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.settings-card .card-header {
+  background-color: #fff;
+  border-bottom: 2px solid var(--at-primary);
+  font-weight: 600;
+}
+
+/* Connection status badges */
+.conn-status {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+}
+
+.conn-status.success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.conn-status.error {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.conn-status.testing {
+  background-color: #fff3cd;
+  color: #664d03;
+}
+
+/* Toast container */
+#toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1100;
+}
+
+/* Analysis page */
+.filter-bar {
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: var(--at-card-shadow);
+  padding: 1rem;
+}
+
+/* Chat interface */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 280px);
+  min-height: 400px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.chat-message {
+  margin-bottom: 1rem;
+  max-width: 85%;
+}
+
+.chat-message.user {
+  margin-left: auto;
+  text-align: right;
+}
+
+.chat-message .bubble {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  text-align: left;
+}
+
+.chat-message.user .bubble {
+  background-color: var(--at-primary);
+  color: #fff;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message.assistant .bubble {
+  background-color: #e9ecef;
+  color: #212529;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.chat-message.assistant .bubble table {
+  font-size: 0.875rem;
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.chat-input input {
+  flex: 1;
+}
+
+/* Chart panels */
+.chart-panel {
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: var(--at-card-shadow);
+  padding: 1.5rem;
+}
+
+/* Loading spinner overlay */
+.loading-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-overlay.active {
+  display: flex;
+}
+
+/* Password input toggle */
+.input-group .btn-outline-secondary {
+  border-color: #ced4da;
+}

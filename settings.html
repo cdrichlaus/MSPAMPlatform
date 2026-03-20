@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - AT Ticket Analysis</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="css/app.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <i class="bi bi-ticket-detailed me-2"></i>AT Ticket Analysis
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="settings.html"><i class="bi bi-gear me-1"></i>Settings</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="analysis.html"><i class="bi bi-graph-up me-1"></i>Analysis</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <h2 class="mb-4">Settings</h2>
+
+    <!-- Cloudflare Worker -->
+    <div class="card settings-card mb-4">
+      <div class="card-header">
+        <i class="bi bi-cloud me-2"></i>Cloudflare Worker
+      </div>
+      <div class="card-body">
+        <div class="mb-0">
+          <label for="workerUrl" class="form-label">Worker URL</label>
+          <input type="url" class="form-control" id="workerUrl"
+                 placeholder="https://your-worker.your-subdomain.workers.dev">
+          <div class="form-text">The URL of your deployed Cloudflare Worker proxy.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Autotask Connection -->
+    <div class="card settings-card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-server me-2"></i>Autotask Connection</span>
+        <span id="atStatus" class="conn-status" style="display:none"></span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="atZone" class="form-label">API Zone</label>
+            <select class="form-select" id="atZone">
+              <option value="">Select a zone...</option>
+              <option value="1">Zone 1 (webservices1.autotask.net)</option>
+              <option value="2">Zone 2 (webservices2.autotask.net)</option>
+              <option value="3">Zone 3 (webservices3.autotask.net)</option>
+              <option value="4">Zone 4 (webservices4.autotask.net)</option>
+              <option value="5">Zone 5 (webservices5.autotask.net)</option>
+              <option value="6">Zone 6 (webservices6.autotask.net)</option>
+              <option value="custom">Custom URL</option>
+            </select>
+          </div>
+          <div class="col-md-6" id="customUrlGroup" style="display:none">
+            <label for="atCustomUrl" class="form-label">Custom Base URL</label>
+            <input type="url" class="form-control" id="atCustomUrl"
+                   placeholder="https://webservicesX.autotask.net/ATServicesRest">
+          </div>
+          <div class="col-md-12">
+            <label for="atUsername" class="form-label">Username</label>
+            <input type="text" class="form-control" id="atUsername"
+                   placeholder="api.user@yourdomain.com">
+          </div>
+          <div class="col-md-12">
+            <label for="atSecret" class="form-label">Secret</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="atSecret">
+              <button class="btn btn-outline-secondary" type="button" id="toggleAtSecret">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <label for="atIntCode" class="form-label">Integration Code</label>
+            <input type="text" class="form-control" id="atIntCode">
+          </div>
+          <div class="col-12">
+            <button class="btn btn-outline-primary" id="testAtBtn">
+              <i class="bi bi-plug me-1"></i>Test Connection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLM / Claude Connection -->
+    <div class="card settings-card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-robot me-2"></i>LLM / Claude Connection</span>
+        <span id="llmStatus" class="conn-status" style="display:none"></span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-12">
+            <label for="llmEndpoint" class="form-label">Endpoint URL</label>
+            <input type="url" class="form-control" id="llmEndpoint"
+                   placeholder="https://openrouter.ai/api/v1">
+            <div class="form-text">OpenAI-compatible API endpoint.</div>
+          </div>
+          <div class="col-md-12">
+            <label for="llmApiKey" class="form-label">API Key</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="llmApiKey">
+              <button class="btn btn-outline-secondary" type="button" id="toggleLlmKey">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="llmModel" class="form-label">Model</label>
+            <select class="form-select" id="llmModel">
+              <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+              <option value="claude-opus-4-20250514">Claude Opus 4</option>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="custom">Other (custom)</option>
+            </select>
+          </div>
+          <div class="col-md-6" id="customModelGroup" style="display:none">
+            <label for="llmCustomModel" class="form-label">Custom Model Name</label>
+            <input type="text" class="form-control" id="llmCustomModel"
+                   placeholder="e.g. mistralai/mixtral-8x7b">
+          </div>
+          <div class="col-12">
+            <button class="btn btn-outline-primary" id="testLlmBtn">
+              <i class="bi bi-plug me-1"></i>Test Connection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary btn-lg" id="saveBtn">
+        <i class="bi bi-check-lg me-1"></i>Save Settings
+      </button>
+      <button class="btn btn-outline-secondary btn-lg" id="clearBtn">
+        <i class="bi bi-trash me-1"></i>Clear All
+      </button>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { getSettings, saveSettings, getDefaults } from './js/config.js';
+    import { testAutotaskConnection, testLLMConnection } from './js/api.js';
+    import { showToast, setButtonLoading, setConnectionStatus, initNav } from './js/ui.js';
+
+    initNav();
+
+    // DOM refs
+    const workerUrl = document.getElementById('workerUrl');
+    const atZone = document.getElementById('atZone');
+    const atCustomUrl = document.getElementById('atCustomUrl');
+    const customUrlGroup = document.getElementById('customUrlGroup');
+    const atUsername = document.getElementById('atUsername');
+    const atSecret = document.getElementById('atSecret');
+    const atIntCode = document.getElementById('atIntCode');
+    const llmEndpoint = document.getElementById('llmEndpoint');
+    const llmApiKey = document.getElementById('llmApiKey');
+    const llmModel = document.getElementById('llmModel');
+    const llmCustomModel = document.getElementById('llmCustomModel');
+    const customModelGroup = document.getElementById('customModelGroup');
+
+    // Load saved settings
+    const settings = getSettings();
+    workerUrl.value = settings.worker.url;
+    atZone.value = settings.autotask.zone;
+    atCustomUrl.value = settings.autotask.customUrl;
+    atUsername.value = settings.autotask.username;
+    atSecret.value = settings.autotask.secret;
+    atIntCode.value = settings.autotask.integrationCode;
+    llmEndpoint.value = settings.llm.endpointUrl;
+    llmApiKey.value = settings.llm.apiKey;
+
+    // Set model dropdown
+    const modelOptions = [...llmModel.options].map(o => o.value);
+    if (modelOptions.includes(settings.llm.model)) {
+      llmModel.value = settings.llm.model;
+    } else {
+      llmModel.value = 'custom';
+      llmCustomModel.value = settings.llm.model;
+      customModelGroup.style.display = '';
+    }
+
+    // Show/hide custom URL field
+    if (settings.autotask.zone === 'custom') {
+      customUrlGroup.style.display = '';
+    }
+
+    // Zone change handler
+    atZone.addEventListener('change', () => {
+      customUrlGroup.style.display = atZone.value === 'custom' ? '' : 'none';
+    });
+
+    // Model change handler
+    llmModel.addEventListener('change', () => {
+      customModelGroup.style.display = llmModel.value === 'custom' ? '' : 'none';
+    });
+
+    // Password toggles
+    document.getElementById('toggleAtSecret').addEventListener('click', () => {
+      atSecret.type = atSecret.type === 'password' ? 'text' : 'password';
+    });
+    document.getElementById('toggleLlmKey').addEventListener('click', () => {
+      llmApiKey.type = llmApiKey.type === 'password' ? 'text' : 'password';
+    });
+
+    // Collect current form values
+    function collectSettings() {
+      return {
+        worker: { url: workerUrl.value.trim() },
+        autotask: {
+          zone: atZone.value,
+          customUrl: atCustomUrl.value.trim(),
+          username: atUsername.value.trim(),
+          secret: atSecret.value,
+          integrationCode: atIntCode.value.trim()
+        },
+        llm: {
+          endpointUrl: llmEndpoint.value.trim(),
+          apiKey: llmApiKey.value,
+          model: llmModel.value === 'custom' ? llmCustomModel.value.trim() : llmModel.value
+        }
+      };
+    }
+
+    // Save
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      saveSettings(collectSettings());
+      showToast('Settings saved to session.', 'success');
+    });
+
+    // Clear
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Clear all settings? This cannot be undone.')) {
+        saveSettings(getDefaults());
+        window.location.reload();
+      }
+    });
+
+    // Test Autotask
+    document.getElementById('testAtBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('testAtBtn');
+      const status = document.getElementById('atStatus');
+      setButtonLoading(btn, true);
+      setConnectionStatus(status, 'testing', 'Testing...');
+
+      // Temporarily save so api.js reads current values
+      saveSettings(collectSettings());
+
+      try {
+        await testAutotaskConnection();
+        setConnectionStatus(status, 'success', 'Connected');
+        showToast('Autotask connection successful!', 'success');
+      } catch (err) {
+        setConnectionStatus(status, 'error', 'Failed');
+        showToast(`Autotask: ${err.message}`, 'error');
+      } finally {
+        setButtonLoading(btn, false);
+      }
+    });
+
+    // Test LLM
+    document.getElementById('testLlmBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('testLlmBtn');
+      const status = document.getElementById('llmStatus');
+      setButtonLoading(btn, true);
+      setConnectionStatus(status, 'testing', 'Testing...');
+
+      saveSettings(collectSettings());
+
+      try {
+        await testLLMConnection();
+        setConnectionStatus(status, 'success', 'Connected');
+        showToast('LLM connection successful!', 'success');
+      } catch (err) {
+        setConnectionStatus(status, 'error', 'Failed');
+        showToast(`LLM: ${err.message}`, 'error');
+      } finally {
+        setButtonLoading(btn, false);
+      }
+    });
+  </script>
+</body>
+</html>
