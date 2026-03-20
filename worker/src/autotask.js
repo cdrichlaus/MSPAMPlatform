@@ -367,54 +367,54 @@ export async function handleAutotask(path, request, env) {
     return jsonResponse({ items: roles });
   }
 
-  // Fetch Lines of Business from contract data
-  // Extracts unique businessDivisionSubdivisionID values from contracts
+  // Fetch Lines of Business (Billing): "Division > Subdivision"
+  // Joins BusinessDivisions + BusinessSubdivisions via BusinessDivisionSubdivisions
   if (path === '/api/autotask/businessdivisions') {
-    // Try BusinessDivisionSubdivisions entity first (Autotask REST API v1.0)
-    const entityNames = [
-      'BusinessDivisionSubdivisions',
-      'BusinessSubdivisions',
-      'BusinessDivisions'
-    ];
+    const allFilter = JSON.stringify({ filter: [{ op: 'gte', field: 'id', value: 0 }] });
 
-    for (const entity of entityNames) {
-      try {
-        const search = JSON.stringify({
-          filter: [{ op: 'gte', field: 'id', value: 0 }]
-        });
-        const url = `${creds.baseUrl}/v1.0/${entity}/query?search=${encodeURIComponent(search)}`;
-        const items = await fetchAllPages(url, headers);
-        const lobs = items
-          .map(d => ({
-            id: d.id,
-            name: d.name || d.divisionName || d.description || `LOB #${d.id}`
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-        return jsonResponse({ items: lobs });
-      } catch {
-        // Try next entity name
-        continue;
-      }
-    }
-
-    // If all entity queries fail, extract LOBs from active contracts
     try {
-      const search = JSON.stringify({
-        filter: [{ op: 'eq', field: 'status', value: 1 }]
-      });
-      const url = `${creds.baseUrl}/v1.0/Contracts/query?search=${encodeURIComponent(search)}`;
-      const contracts = await fetchAllPages(url, headers);
+      // Fetch all three entities in parallel
+      const [joinItems, divItems, subItems] = await Promise.all([
+        fetchAllPages(`${creds.baseUrl}/v1.0/BusinessDivisionSubdivisions/query?search=${encodeURIComponent(allFilter)}`, headers),
+        fetchAllPages(`${creds.baseUrl}/v1.0/BusinessDivisions/query?search=${encodeURIComponent(allFilter)}`, headers),
+        fetchAllPages(`${creds.baseUrl}/v1.0/BusinessSubdivisions/query?search=${encodeURIComponent(allFilter)}`, headers)
+      ]);
 
-      const lobIds = [...new Set(
-        contracts
-          .map(c => c.businessDivisionSubdivisionID)
-          .filter(Boolean)
-      )];
+      // Build lookup maps
+      const divMap = {};
+      divItems.forEach(d => { divMap[d.id] = d.name || d.divisionName || `Division #${d.id}`; });
+      const subMap = {};
+      subItems.forEach(s => { subMap[s.id] = s.name || s.subdivisionName || `Subdivision #${s.id}`; });
 
-      const lobs = lobIds.map(id => ({ id, name: `Line of Business #${id}` }));
+      // Join: each BusinessDivisionSubdivision has businessDivisionID + businessSubdivisionID
+      const lobs = joinItems.map(j => {
+        const divName = divMap[j.businessDivisionID] || `Division #${j.businessDivisionID}`;
+        const subName = subMap[j.businessSubdivisionID] || `Subdivision #${j.businessSubdivisionID}`;
+        return {
+          id: j.id,
+          name: `${divName} > ${subName}`,
+          divisionId: j.businessDivisionID,
+          subdivisionId: j.businessSubdivisionID
+        };
+      }).sort((a, b) => a.name.localeCompare(b.name));
+
       return jsonResponse({ items: lobs });
     } catch {
-      return jsonResponse({ items: [] });
+      // Fallback: extract LOB IDs from active contracts
+      try {
+        const search = JSON.stringify({ filter: [{ op: 'eq', field: 'status', value: 1 }] });
+        const url = `${creds.baseUrl}/v1.0/Contracts/query?search=${encodeURIComponent(search)}`;
+        const contracts = await fetchAllPages(url, headers);
+
+        const lobIds = [...new Set(
+          contracts.map(c => c.businessDivisionSubdivisionID).filter(Boolean)
+        )];
+
+        const lobs = lobIds.map(id => ({ id, name: `Line of Business #${id}` }));
+        return jsonResponse({ items: lobs });
+      } catch {
+        return jsonResponse({ items: [] });
+      }
     }
   }
 
