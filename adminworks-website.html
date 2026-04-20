@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdminWorks | MSP Bookkeeping & Autotask Implementation</title>
+  <meta name="description" content="AdminWorks delivers Autotask PSA implementation and QuickBooks bookkeeping built exclusively for IT Service Providers. Two lanes, done well, nothing else." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #1B2A47;
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* ── Brand Colors ── */
+    :root {
+      --navy:    #1B2A47;
+      --teal:    #1A9B8C;
+      --teal-dk: #157a6e;
+      --purple:  #7B2D96;
+      --purple-dk: #621f79;
+      --gray-50: #F8F9FB;
+      --gray-100:#EEF0F5;
+      --gray-300:#C4C9D4;
+      --gray-600:#5E6B84;
+      --white:   #ffffff;
+    }
+
+    /* ── Utility ── */
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 80px 0; }
+    .section-sm { padding: 56px 0; }
+    .text-center { text-align: center; }
+    .text-teal { color: var(--teal); }
+    .text-purple { color: var(--purple); }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: rgba(26,155,140,.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+
+    h1,h2,h3,h4 { line-height: 1.2; color: var(--navy); }
+    h1 { font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 800; }
+    h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700; }
+    h3 { font-size: 1.2rem; font-weight: 700; }
+    p  { color: var(--gray-600); line-height: 1.75; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all .2s;
+      border: 2px solid transparent;
+    }
+    .btn-primary {
+      background: var(--teal);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--teal-dk); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,155,140,.35); }
+    .btn-outline {
+      border-color: var(--white);
+      color: var(--white);
+      background: transparent;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,.12); }
+    .btn-purple {
+      background: var(--purple);
+      color: #fff;
+    }
+    .btn-purple:hover { background: var(--purple-dk); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(123,45,150,.3); }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      box-shadow: 0 1px 8px rgba(27,42,71,.06);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .nav-logo img {
+      height: 48px;
+      width: auto;
+    }
+    .nav-logo-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -.3px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-600);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--teal); }
+    .nav-cta { display: flex; align-items: center; gap: 12px; }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #243659 55%, #1e3a5f 100%);
+      padding: 100px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -120px; right: -120px;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,155,140,.18) 0%, transparent 70%);
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123,45,150,.15) 0%, transparent 70%);
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+    }
+    .hero-eyebrow {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero-sub {
+      font-size: 17px;
+      color: rgba(255,255,255,.75);
+      margin-bottom: 40px;
+      max-width: 520px;
+      line-height: 1.8;
+    }
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 56px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,.12);
+    }
+    .hero-stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 13px;
+      color: rgba(255,255,255,.55);
+      margin-top: 4px;
+    }
+
+    /* Hero visual card */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+    }
+    .hero-card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 32px;
+      backdrop-filter: blur(8px);
+      width: 100%;
+      max-width: 380px;
+    }
+    .hero-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 24px;
+    }
+    .hero-card-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .hero-card-item:last-child { border-bottom: none; }
+    .hero-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+    .icon-teal { background: rgba(26,155,140,.2); }
+    .icon-purple { background: rgba(123,45,150,.2); }
+    .hero-card-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+    }
+    .hero-card-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,.45);
+    }
+    .hero-card-check {
+      margin-left: auto;
+      color: var(--teal);
+      font-size: 16px;
+    }
+
+    /* ── Trust Bar ── */
+    .trust-bar {
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 20px 0;
+    }
+    .trust-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-600);
+    }
+    .trust-item span { font-size: 18px; }
+
+    /* ── Who We Serve ── */
+    .serve { background: var(--white); }
+    .serve-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 800px) { .serve-grid { grid-template-columns: 1fr; } }
+    .serve-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 32px;
+    }
+    .serve-tag {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy);
+    }
+    .serve-callout {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
+      border-radius: 16px;
+      padding: 40px;
+      color: #fff;
+    }
+    .serve-callout-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .serve-check-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .check-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .serve-check-text {
+      font-size: 14px;
+      color: rgba(255,255,255,.8);
+      line-height: 1.6;
+    }
+    .serve-check-text strong { color: #fff; }
+
+    /* ── Two Lanes ── */
+    .two-lanes { background: var(--gray-50); }
+    .lanes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-top: 48px;
+    }
+    @media (max-width: 700px) { .lanes-grid { grid-template-columns: 1fr; } }
+    .lane-card {
+      border-radius: 16px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .lane-card-teal {
+      background: linear-gradient(135deg, var(--teal) 0%, #13786c 100%);
+      color: #fff;
+    }
+    .lane-card-purple {
+      background: linear-gradient(135deg, var(--purple) 0%, #4f1d62 100%);
+      color: #fff;
+    }
+    .lane-number {
+      font-size: 72px;
+      font-weight: 900;
+      opacity: .1;
+      position: absolute;
+      top: -8px;
+      right: 24px;
+      line-height: 1;
+      color: #fff;
+    }
+    .lane-icon { font-size: 36px; margin-bottom: 20px; }
+    .lane-title { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 12px; }
+    .lane-desc { font-size: 15px; color: rgba(255,255,255,.8); line-height: 1.75; margin-bottom: 24px; }
+    .lane-list { list-style: none; }
+    .lane-list li {
+      font-size: 14px;
+      color: rgba(255,255,255,.75);
+      padding: 6px 0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .lane-list li::before { content: '→'; opacity: .6; }
+
+    /* ── Services ── */
+    .services { background: var(--white); }
+    .services-intro { max-width: 640px; margin: 0 auto 56px; }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 900px) { .services-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 580px) { .services-grid { grid-template-columns: 1fr; } }
+    .service-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: 14px;
+      padding: 32px 28px;
+      transition: all .25s;
+      position: relative;
+    }
+    .service-card:hover {
+      border-color: var(--teal);
+      box-shadow: 0 8px 32px rgba(26,155,140,.12);
+      transform: translateY(-3px);
+    }
+    .service-card.featured {
+      border-color: var(--teal);
+      background: linear-gradient(160deg, rgba(26,155,140,.04) 0%, #fff 100%);
+    }
+    .service-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .si-teal { background: rgba(26,155,140,.12); }
+    .si-purple { background: rgba(123,45,150,.1); }
+    .si-navy { background: rgba(27,42,71,.08); }
+    .service-card h3 { font-size: 16px; margin-bottom: 10px; }
+    .service-card p { font-size: 14px; line-height: 1.7; }
+    .service-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--teal);
+      text-decoration: none;
+    }
+    .service-link:hover { gap: 10px; }
+
+    /* ── Proof / Quote ── */
+    .proof { background: var(--gray-50); }
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+    @media (max-width: 840px) { .proof-grid { grid-template-columns: 1fr; } }
+    .proof-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 32px 28px;
+      border-left: 4px solid var(--teal);
+      box-shadow: 0 2px 12px rgba(27,42,71,.06);
+    }
+    .proof-card.purple-border { border-left-color: var(--purple); }
+    .proof-quote {
+      font-size: 15px;
+      color: var(--gray-600);
+      line-height: 1.8;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    .proof-quote::before { content: '\201C'; color: var(--teal); font-size: 24px; font-style: normal; }
+    .proof-source {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* ── How We Work ── */
+    .how { background: var(--white); }
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      margin-top: 56px;
+      position: relative;
+    }
+    @media (max-width: 900px) {
+      .how-steps { grid-template-columns: 1fr; gap: 32px; }
+      .step-connector { display: none; }
+    }
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: calc(10% + 28px);
+      right: calc(10% + 28px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+      z-index: 0;
+    }
+    @media (max-width: 900px) { .how-steps::before { display: none; } }
+    .how-step {
+      text-align: center;
+      padding: 0 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--teal), var(--purple));
+      box-shadow: 0 4px 16px rgba(26,155,140,.3);
+    }
+    .step-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--gray-600); line-height: 1.65; }
+
+    /* ── About ── */
+    .about { background: var(--navy); }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    @media (max-width: 800px) { .about-grid { grid-template-columns: 1fr; gap: 48px; } }
+    .about h2 { color: #fff; margin-bottom: 20px; }
+    .about p { color: rgba(255,255,255,.7); }
+    .about .badge { color: var(--teal); background: rgba(26,155,140,.15); }
+    .team-cards { display: flex; flex-direction: column; gap: 20px; }
+    .team-card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .team-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .av-teal { background: linear-gradient(135deg, var(--teal), #13786c); }
+    .av-purple { background: linear-gradient(135deg, var(--purple), #4f1d62); }
+    .team-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .team-role { font-size: 12px; color: var(--teal); font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+    .team-bio { font-size: 13px; color: rgba(255,255,255,.6); line-height: 1.65; }
+    .about-differentiators {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .diff-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .diff-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(26,155,140,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .diff-text { font-size: 14px; color: rgba(255,255,255,.7); line-height: 1.6; }
+    .diff-text strong { color: #fff; }
+
+    /* ── SLI / Industry Alignment ── */
+    .sli { background: var(--gray-50); }
+    .sli-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 800px) { .sli-inner { grid-template-columns: 1fr; } }
+    .sli-logo-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .eco-badge {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      box-shadow: 0 1px 4px rgba(27,42,71,.06);
+    }
+    .sli-highlight {
+      background: linear-gradient(135deg, var(--teal) 0%, #13786c 100%);
+      border-radius: 16px;
+      padding: 40px;
+      color: #fff;
+    }
+    .sli-highlight h3 { color: #fff; font-size: 1.3rem; margin-bottom: 16px; }
+    .sli-highlight p { color: rgba(255,255,255,.8); font-size: 15px; }
+    .sli-metric {
+      display: flex;
+      gap: 32px;
+      margin-top: 32px;
+    }
+    .sli-metric-item { text-align: center; }
+    .sli-metric-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .sli-metric-label {
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-top: 4px;
+    }
+
+    /* ── CTA Section ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 50%, #2d1f4a 100%);
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,155,140,.15) 0%, transparent 70%);
+    }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta-section h2 { color: #fff; max-width: 600px; margin: 0 auto 16px; }
+    .cta-section p { color: rgba(255,255,255,.65); font-size: 16px; max-width: 480px; margin: 0 auto 40px; }
+    .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .contact-strip {
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: rgba(255,255,255,.7);
+    }
+    .contact-item a { color: rgba(255,255,255,.85); text-decoration: none; }
+    .contact-item a:hover { color: var(--teal); }
+    .contact-icon { font-size: 18px; }
+
+    /* ── Footer ── */
+    footer {
+      background: #111827;
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .footer-logo img { height: 36px; }
+    .footer-logo-text { font-size: 16px; font-weight: 700; color: #fff; }
+    .footer-nav {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .footer-nav a {
+      font-size: 13px;
+      color: rgba(255,255,255,.45);
+      text-decoration: none;
+    }
+    .footer-nav a:hover { color: var(--teal); }
+    .footer-copy {
+      font-size: 12px;
+      color: rgba(255,255,255,.3);
+    }
+
+    /* ── Divider ── */
+    .divider {
+      width: 48px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+      margin: 16px 0 32px;
+    }
+    .divider-center { margin: 16px auto 32px; }
+
+    /* ── Section Headers ── */
+    .section-header { margin-bottom: 56px; }
+    .section-header.center { text-align: center; }
+    .section-header p { margin-top: 16px; max-width: 580px; font-size: 16px; }
+    .section-header.center p { margin: 16px auto 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ════ NAV ════ -->
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="#" class="nav-logo">
+          <!-- Replace src with your actual logo path in HubSpot -->
+          <img src="data:image/png;base64,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" alt="AdminWorks" onerror="this.style.display='none'" />
+          <span class="nav-logo-text">AdminWorks</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#who-we-serve">Who We Serve</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#how-we-work">How We Work</a></li>
+          <li><a href="#about">About</a></li>
+        </ul>
+        <div class="nav-cta">
+          <a href="#contact" class="btn btn-primary">Schedule a Discovery Call</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ════ HERO ════ -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <p class="hero-eyebrow">Built exclusively for IT Service Providers</p>
+          <h1>Your books should run as clean as<br/><span>your service desk</span></h1>
+          <p class="hero-sub">
+            AdminWorks implements Autotask PSA and QuickBooks best practices for MSPs —
+            and runs the ongoing bookkeeping that keeps it all honest. Two lanes, done well, nothing else.
+          </p>
+          <div class="hero-ctas">
+            <a href="#contact" class="btn btn-primary">Schedule a Discovery Call ›</a>
+            <a href="#services" class="btn btn-outline">Explore Services</a>
+          </div>
+          <div class="hero-stats">
+            <div>
+              <div class="hero-stat-num">20+</div>
+              <div class="hero-stat-label">Years in the MSP industry</div>
+            </div>
+            <div>
+              <div class="hero-stat-num">2</div>
+              <div class="hero-stat-label">Focused service lanes</div>
+            </div>
+            <div>
+              <div class="hero-stat-num">SLI</div>
+              <div class="hero-stat-label">Aligned chart of accounts</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-card">
+            <div class="hero-card-title">What AdminWorks Delivers</div>
+            <div class="hero-card-item">
+              <div class="hero-card-icon icon-teal">⚙️</div>
+              <div>
+                <div class="hero-card-label">Autotask PSA Implementation</div>
+                <div class="hero-card-sub">Service desk, contracts, integrations</div>
+              </div>
+              <div class="hero-card-check">✓</div>
+            </div>
+            <div class="hero-card-item">
+              <div class="hero-card-icon icon-teal">🔗</div>
+              <div>
+                <div class="hero-card-label">Kaseya · Pax8 · Datto · ConnectBooster</div>
+                <div class="hero-card-sub">Vendor ecosystem integration</div>
+              </div>
+              <div class="hero-card-check">✓</div>
+            </div>
+            <div class="hero-card-item">
+              <div class="hero-card-icon icon-purple">📒</div>
+              <div>
+                <div class="hero-card-label">Full-Cycle MSP Bookkeeping</div>
+                <div class="hero-card-sub">AP, AR, payroll, month-end close</div>
+              </div>
+              <div class="hero-card-check">✓</div>
+            </div>
+            <div class="hero-card-item">
+              <div class="hero-card-icon icon-purple">📊</div>
+              <div>
+                <div class="hero-card-label">Fractional Controller Services</div>
+                <div class="hero-card-sub">SLI-aligned financials &amp; reporting</div>
+              </div>
+              <div class="hero-card-check">✓</div>
+            </div>
+            <div class="hero-card-item">
+              <div class="hero-card-icon icon-teal">🔄</div>
+              <div>
+                <div class="hero-card-label">Autotask ↔ QuickBooks Integration</div>
+                <div class="hero-card-sub">GL mapping, sync monitoring</div>
+              </div>
+              <div class="hero-card-check">✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ TRUST BAR ════ -->
+  <div class="trust-bar">
+    <div class="container">
+      <div class="trust-inner">
+        <div class="trust-item"><span>🏆</span> Service Leadership Index Aligned</div>
+        <div class="trust-item"><span>🎓</span> Pax8 Academy Senior Executive Coach</div>
+        <div class="trust-item"><span>📋</span> Fixed-Fee Statements of Work</div>
+        <div class="trust-item"><span>🔐</span> MSP-Exclusive Practice</div>
+        <div class="trust-item"><span>⚡</span> QuickBooks Online Specialists</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ WHO WE SERVE ════ -->
+  <section class="section serve" id="who-we-serve">
+    <div class="container">
+      <div class="serve-grid">
+        <div>
+          <span class="badge">Who We Serve</span>
+          <div class="divider"></div>
+          <h2>We exist for one type of business: the MSP</h2>
+          <p style="margin-top:20px; font-size:16px;">
+            Most accountants and consultants have never seen the problems MSPs live with every day —
+            revenue that lives in Autotask, cloud products sold on monthly and annual cycles at the same time,
+            COGS that has to line up with product revenue by client, and sync failures between Autotask
+            and QuickBooks that no one catches until the P&amp;L is wrong.
+          </p>
+          <p style="margin-top:16px;">
+            AdminWorks was built for this. We speak the language of your business — Autotask, Kaseya,
+            Pax8, ConnectBooster, SLI — because this is the only business we serve.
+          </p>
+          <div class="serve-tag-list">
+            <span class="serve-tag">Autotask PSA</span>
+            <span class="serve-tag">QuickBooks Online</span>
+            <span class="serve-tag">Kaseya One</span>
+            <span class="serve-tag">Pax8</span>
+            <span class="serve-tag">ConnectBooster</span>
+            <span class="serve-tag">Datto</span>
+            <span class="serve-tag">Microsoft NCE</span>
+            <span class="serve-tag">SLI Chart of Accounts</span>
+            <span class="serve-tag">Pax8 Academy</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="serve-callout">
+            <div class="serve-callout-title">You're the right fit if you're…</div>
+            <div class="serve-check-item">
+              <div class="check-icon">✓</div>
+              <div class="serve-check-text"><strong>An MSP aligning with best practices</strong> through Pax8 Academy peer groups, SLI, or your own initiative — and you need a third party to implement and operate the design.</div>
+            </div>
+            <div class="serve-check-item">
+              <div class="check-icon">✓</div>
+              <div class="serve-check-text"><strong>Looking to transition to the SLI standard</strong> chart of accounts and need books that reflect how MSP revenue, COGS, and contracts actually behave.</div>
+            </div>
+            <div class="serve-check-item">
+              <div class="check-icon">✓</div>
+              <div class="serve-check-text"><strong>Ready to outsource</strong> your PSA configuration, vendor integrations, or full bookkeeping operation so your team can stay focused on leading people and growing the business.</div>
+            </div>
+            <div class="serve-check-item">
+              <div class="check-icon">✓</div>
+              <div class="serve-check-text"><strong>Submitting financials to a peer group or lender</strong> and need a controller who knows what those numbers should actually look like for a healthy MSP.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ TWO LANES ════ -->
+  <section class="section two-lanes">
+    <div class="container">
+      <div class="section-header center">
+        <span class="badge">Our Practice</span>
+        <div class="divider divider-center"></div>
+        <h2>Two lanes. Done well. Nothing else.</h2>
+        <p>AdminWorks doesn't try to be everything. We execute two things at a high level — implementation and bookkeeping — because that's exactly what MSP partners need from a financial operations partner.</p>
+      </div>
+      <div class="lanes-grid">
+        <div class="lane-card lane-card-teal">
+          <div class="lane-number">01</div>
+          <div class="lane-icon">⚙️</div>
+          <div class="lane-title">Autotask &amp; System Implementation</div>
+          <div class="lane-desc">
+            We implement the PSA and financial system design you've already aligned on.
+            When your team needs to focus on leading the service desk — not configuring it —
+            we step in under a fixed-fee Statement of Work.
+          </div>
+          <ul class="lane-list">
+            <li>Autotask PSA &amp; Service Desk configuration</li>
+            <li>Contract framework redesign</li>
+            <li>Kaseya, Pax8, Datto, ConnectBooster integrations</li>
+            <li>Autotask ↔ QuickBooks GL mapping &amp; sync</li>
+          </ul>
+        </div>
+        <div class="lane-card lane-card-purple">
+          <div class="lane-number">02</div>
+          <div class="lane-icon">📒</div>
+          <div class="lane-title">Bookkeeping &amp; Controller Services</div>
+          <div class="lane-desc">
+            Full-cycle bookkeeping and fractional controller support run by a team that
+            already understands how MSP revenue, COGS, and contracts actually behave.
+            Ann Rich leads this operation.
+          </div>
+          <ul class="lane-list">
+            <li>AP, AR, payroll, and sales tax</li>
+            <li>Month-end close &amp; revenue/COGS recognition</li>
+            <li>Accrual, deferral &amp; amortization entries</li>
+            <li>Financial statements &amp; SLI peer group submissions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SERVICES ════ -->
+  <section class="section services" id="services">
+    <div class="container">
+      <div class="section-header center services-intro">
+        <span class="badge">Services</span>
+        <div class="divider divider-center"></div>
+        <h2>Everything your MSP back office needs</h2>
+        <p>Scoped, priced, and delivered by people who understand exactly how your business works.</p>
+      </div>
+
+      <div class="services-grid">
+
+        <div class="service-card featured">
+          <div class="service-icon si-teal">🖥️</div>
+          <h3>Autotask Implementation<br/>(PSA &amp; Service Desk)</h3>
+          <p>We implement the best-practice PSA and Service Desk design you've already aligned on — scoped in a discovery call, delivered under a fixed-fee SOW. Your team stays focused on leading people; we handle the PSA.</p>
+          <a href="#contact" class="service-link">Get a quote ›</a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon si-teal">📄</div>
+          <h3>Autotask Contract Framework</h3>
+          <p>We consolidate sprawling per-product contracts into a clean framework: one Default contract (MS or T&amp;M) plus Cloud Product Resale contracts for monthly and annual billing. Billing becomes predictable. Month-end gets shorter.</p>
+          <a href="#contact" class="service-link">Get a quote ›</a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon si-teal">🔗</div>
+          <h3>MSP Vendor Integrations</h3>
+          <p>Kaseya. Pax8. Datto. ConnectBooster. Microsoft NCE. We wire your vendor ecosystem into Autotask so products flow into contracts automatically, then we sit on top of it to catch the exceptions.</p>
+          <a href="#contact" class="service-link">Get a quote ›</a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon si-teal">🔄</div>
+          <h3>Autotask ↔ QuickBooks Integration</h3>
+          <p>GL mapping, initial sync validation, and ongoing monitoring so your MSP revenue, COGS, and taxes land correctly in QuickBooks. When a sync fails, we're the ones who fix it — not you.</p>
+          <a href="#contact" class="service-link">Get a quote ›</a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon si-purple">📒</div>
+          <h3>Outsourced Bookkeeping for MSPs</h3>
+          <p>AP, AR, payroll, sales tax, month-end close, revenue and COGS recognition, amortization, payroll accrual — all run by a team that already understands ConnectBooster, QBO, and how Autotask posts revenue.</p>
+          <a href="#contact" class="service-link">Learn more ›</a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon si-purple">📊</div>
+          <h3>Fractional Controller Services</h3>
+          <p>For MSPs that need to submit financials to a peer group or lender, clean up deferred revenue, or put another set of eyes on the P&amp;L each month. We prepare, review, and coordinate with whoever else is in your books.</p>
+          <a href="#contact" class="service-link">Learn more ›</a>
+        </div>
+
+        <div class="service-card" style="grid-column: span 1;">
+          <div class="service-icon si-navy">🔍</div>
+          <h3>GL Transaction Audits</h3>
+          <p>A periodic, Excel-based audit of your general ledger that flags discrepancies — and comes with the corrective entries already made. It becomes a living reference your team uses for future transactions.</p>
+          <a href="#contact" class="service-link">Learn more ›</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SOCIAL PROOF / QUOTES ════ -->
+  <section class="section proof">
+    <div class="container">
+      <div class="section-header center">
+        <span class="badge">How Partners Describe Us</span>
+        <div class="divider divider-center"></div>
+        <h2>The words partners use to find us</h2>
+        <p>These themes show up consistently in real conversations with MSP operators looking for a financial partner that actually knows their business.</p>
+      </div>
+      <div class="proof-grid">
+        <div class="proof-card">
+          <div class="proof-quote">
+            I understand that your focus needs to be on positioning the right person for leading the service desk team and not so much on the PSA configuration. I'm happy to step in and take this off of your plate.
+          </div>
+          <div class="proof-source">Chuck Rich · AdminWorks engagement introduction</div>
+        </div>
+        <div class="proof-card purple-border">
+          <div class="proof-quote" style="--teal: var(--purple);">
+            I'm looking for someone to process AR, AP, and Payroll. We use ConnectBooster and QBO. Some client payments are processed directly from their bank as an ACH, but the majority are credit card through ConnectBooster.
+          </div>
+          <div class="proof-source">MSP Partner · Prospect inquiry</div>
+        </div>
+        <div class="proof-card">
+          <div class="proof-quote">
+            I'm recommending that we consolidate your cloud products into one contract for monthly billed products and one for annually billed products. Your new contract framework will look like the following for each client: Default Contract, Cloud Product Resale (Annual), Cloud Product Resale (Monthly).
+          </div>
+          <div class="proof-source">Chuck Rich · Contract redesign engagement</div>
+        </div>
+      </div>
+
+      <!-- Value Props -->
+      <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:28px; margin-top:48px;" class="vp-grid">
+        <div style="text-align:center; padding:32px 24px;">
+          <div style="font-size:40px; margin-bottom:16px;">🎯</div>
+          <h3 style="margin-bottom:8px;">Take it off your plate</h3>
+          <p style="font-size:14px;">Partners hire AdminWorks because the internal team needs to focus on leading the service desk, not configuring it.</p>
+        </div>
+        <div style="text-align:center; padding:32px 24px;">
+          <div style="font-size:40px; margin-bottom:16px;">✅</div>
+          <h3 style="margin-bottom:8px;">Aligned with your approach</h3>
+          <p style="font-size:14px;">Partners recognize the implementation approach because it matches the best-practice design they've already committed to.</p>
+        </div>
+        <div style="text-align:center; padding:32px 24px;">
+          <div style="font-size:40px; margin-bottom:16px;">🤝</div>
+          <h3 style="margin-bottom:8px;">A true outsource partner</h3>
+          <p style="font-size:14px;">Partners describe the engagement as outsourcing their accounting and implementation functions to people who already know MSPs.</p>
+        </div>
+      </div>
+      <style>
+        @media (max-width: 700px) { .vp-grid { grid-template-columns: 1fr !important; } }
+      </style>
+    </div>
+  </section>
+
+  <!-- ════ HOW WE WORK ════ -->
+  <section class="section how" id="how-we-work">
+    <div class="container">
+      <div class="section-header center">
+        <span class="badge">The Engagement Model</span>
+        <div class="divider divider-center"></div>
+        <h2>How we work together</h2>
+        <p>Every AdminWorks engagement follows the same proven path — from the first call to the monthly rhythm that keeps your books clean and your financials reliable.</p>
+      </div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">1</div>
+          <div class="step-title">Discovery Call</div>
+          <div class="step-desc">We determine the outcome you're expecting, objectives, requirements, and what ongoing support you'll need.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">2</div>
+          <div class="step-title">Statement of Work</div>
+          <div class="step-desc">For implementation projects, we write a clear SOW — defined scope, fixed price, defined deliverables. No surprises.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">3</div>
+          <div class="step-title">Onboarding</div>
+          <div class="step-desc">We collect the access, permissions, and data we need. An onboarding invoice kicks off the work.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">4</div>
+          <div class="step-title">Execution</div>
+          <div class="step-desc">Chuck runs implementation and integration. Ann Rich heads bookkeeping and controller work. Nothing drops between us.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">5</div>
+          <div class="step-title">Monthly Rhythm</div>
+          <div class="step-desc">Ongoing partners get a monthly close, statements, external reporting, and a running audit trail in QuickBooks.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SLI / ECOSYSTEM ALIGNMENT ════ -->
+  <section class="section sli">
+    <div class="container">
+      <div class="sli-inner">
+        <div>
+          <span class="badge">Industry Alignment</span>
+          <div class="divider"></div>
+          <h2>Built on the SLI standard — the industry benchmark for MSP financials</h2>
+          <p style="font-size:16px; margin-top:20px;">
+            We work exclusively with MSPs who are aligned with or transitioning to the Service Leadership Index (SLI)
+            standard chart of accounts. That means your financials are structured the way the industry's top
+            benchmarking platform expects them — so your numbers are comparable, meaningful, and defensible.
+          </p>
+          <p style="margin-top:16px;">
+            Whether you're submitting to SLI, reporting to a peer group, or preparing for a lender conversation,
+            AdminWorks ensures your books tell the right story.
+          </p>
+          <div class="sli-logo-strip">
+            <span class="eco-badge">Autotask PSA</span>
+            <span class="eco-badge">QuickBooks Online</span>
+            <span class="eco-badge">Kaseya One</span>
+            <span class="eco-badge">Pax8</span>
+            <span class="eco-badge">Datto</span>
+            <span class="eco-badge">ConnectBooster</span>
+            <span class="eco-badge">Microsoft NCE</span>
+            <span class="eco-badge">Pax8 Academy</span>
+          </div>
+        </div>
+        <div>
+          <div class="sli-highlight">
+            <h3>What SLI alignment means for your business</h3>
+            <p>
+              The Service Leadership Index is the industry standard for MSP financial benchmarking.
+              When your chart of accounts is built to SLI specification, you can compare your revenue,
+              COGS, and margins against hundreds of peers — and know exactly where you stand.
+            </p>
+            <p style="margin-top:16px;">
+              AdminWorks implements and maintains that structure in QuickBooks Online, so you're always
+              benchmarkable, always reportable, and never scrambling before a peer group presentation.
+            </p>
+            <div class="sli-metric">
+              <div class="sli-metric-item">
+                <div class="sli-metric-num">20+</div>
+                <div class="sli-metric-label">Years MSP Experience</div>
+              </div>
+              <div class="sli-metric-item">
+                <div class="sli-metric-num">SLI</div>
+                <div class="sli-metric-label">Standard Aligned</div>
+              </div>
+              <div class="sli-metric-item">
+                <div class="sli-metric-num">QBO</div>
+                <div class="sli-metric-label">Platform Expertise</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ ABOUT ════ -->
+  <section class="section about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div>
+          <span class="badge">About AdminWorks</span>
+          <div class="divider"></div>
+          <h2>The MSP back-office partner with 20+ years in the industry</h2>
+          <p style="margin-top:20px; font-size:16px;">
+            AdminWorks exists for one reason: MSPs have very specific back-office problems,
+            and most accountants and consultants have never seen them before.
+          </p>
+          <p style="margin-top:16px;">
+            We solve those problems in two ways. We implement Autotask and QuickBooks
+            configurations that reflect current best practice, and we run the bookkeeping
+            behind them.
+          </p>
+          <div class="about-differentiators">
+            <div class="diff-item">
+              <div class="diff-icon">🔧</div>
+              <div class="diff-text"><strong>Implementation first.</strong> We implement what you've already designed — we don't redesign your business strategy, we execute your operational vision.</div>
+            </div>
+            <div class="diff-item">
+              <div class="diff-icon">📋</div>
+              <div class="diff-text"><strong>Clear engagements.</strong> Every project starts with a discovery call and a written Statement of Work. No ambiguity, no scope creep.</div>
+            </div>
+            <div class="diff-item">
+              <div class="diff-icon">🎯</div>
+              <div class="diff-text"><strong>MSP-only practice.</strong> We don't serve general SMBs. Every hour we work is spent on the problems your business actually has.</div>
+            </div>
+          </div>
+        </div>
+        <div class="team-cards">
+          <div class="team-card">
+            <div class="team-avatar av-teal">CR</div>
+            <div>
+              <div class="team-name">Chuck Rich</div>
+              <div class="team-role">Founder · Implementation Lead</div>
+              <div class="team-bio">
+                Chuck leads all Autotask implementation, integration, and system configuration work at AdminWorks.
+                With over 20 years in the MSP industry, he has been in the back office of more MSPs than most consultants
+                have seen. Separately, Chuck serves as a Senior Executive Coach at Pax8 Academy — that coaching role is
+                distinct from AdminWorks. If you've worked with Chuck in a coaching context and are now ready for
+                implementation, AdminWorks is the engagement path.
+              </div>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar av-purple">AR</div>
+            <div>
+              <div class="team-name">Ann Rich</div>
+              <div class="team-role">Bookkeeping &amp; Controller Lead</div>
+              <div class="team-bio">
+                Ann heads AdminWorks' bookkeeping and controller operation. She and her team handle
+                full-cycle bookkeeping, month-end close, accruals, amortization schedules, and financial
+                statement preparation for MSP partners — all run through QuickBooks Online with the same
+                SLI-aligned structure that makes the numbers meaningful.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ CTA ════ -->
+  <section class="cta-section" id="contact">
+    <div class="container">
+      <div class="cta-inner">
+        <span class="badge" style="background:rgba(26,155,140,.2); color:var(--teal);">Ready to Start?</span>
+        <h2>The next step is a discovery call</h2>
+        <p>
+          We'll determine the outcome you're expecting, your objectives, your requirements,
+          and what ongoing support you'll need. No commitment required.
+        </p>
+        <div class="cta-buttons">
+          <a href="mailto:crich@adminworksllc.com?subject=Discovery Call Request" class="btn btn-primary" style="font-size:16px; padding:16px 32px;">
+            Schedule a Discovery Call ›
+          </a>
+          <a href="mailto:crich@adminworksllc.com" class="btn btn-outline" style="font-size:16px; padding:16px 32px;">
+            Send Us an Email
+          </a>
+        </div>
+        <div class="contact-strip">
+          <div class="contact-item">
+            <span class="contact-icon">👤</span>
+            <span>Chuck Rich</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">✉️</span>
+            <a href="mailto:crich@adminworksllc.com">crich@adminworksllc.com</a>
+          </div>
+          <div class="contact-item">
+            <span class="contact-icon">📞</span>
+            <a href="tel:9857890377">985-789-0377</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ FOOTER ════ -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="footer-logo">
+          <img src="data:image/png;base64,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" alt="AdminWorks" onerror="this.style.display='none'" />
+          <span class="footer-logo-text">AdminWorks</span>
+        </a>
+        <ul class="footer-nav">
+          <li><a href="#who-we-serve">Who We Serve</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#how-we-work">How We Work</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <span class="footer-copy">© 2026 AdminWorks LLC · Built for MSPs</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
