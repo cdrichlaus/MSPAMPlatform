@@ -4,6 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdminWorks | Bookkeeping for IT Service Providers</title>
+
+  <!-- SEO -->
+  <meta name="description" content="AdminWorks provides specialized bookkeeping and fractional controller services exclusively for IT Service Providers and MSPs. QuickBooks aligned to industry standards for peer groups, benchmarking, and real financial decisions." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.adminworks.llc/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AdminWorks | Bookkeeping for IT Service Providers" />
+  <meta property="og:description" content="Specialized bookkeeping and fractional controller services for IT Service Providers and MSPs. QuickBooks aligned to industry standards for peer groups, benchmarking, and acquisition readiness." />
+  <meta property="og:url" content="https://www.adminworks.llc/" />
+  <meta property="og:site_name" content="AdminWorks" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
@@ -1009,6 +1026,75 @@
     .hero-actions { animation: fadeUp 0.6s ease both; animation-delay: 0.5s; }
     .hero-fit-panel { animation: fadeUp 0.6s ease both; animation-delay: 0.3s; }
 
+    /* ── HAMBURGER / MOBILE NAV ── */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.4rem;
+      z-index: 910;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--slate-light);
+      border-radius: 2px;
+      transition: transform 0.25s, opacity 0.2s;
+    }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav-mobile {
+      display: none;
+      position: fixed;
+      top: 65px;
+      left: 0;
+      right: 0;
+      background: rgba(15,30,46,0.98);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--rule);
+      padding: 0.5rem 2rem 2rem;
+      z-index: 899;
+      flex-direction: column;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile ul { list-style: none; }
+    .nav-mobile ul li { border-bottom: 1px solid rgba(200,146,42,0.07); }
+    .nav-mobile ul li a {
+      display: block;
+      padding: 1rem 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate-light);
+    }
+    .nav-mobile ul li a:hover { color: var(--amber); }
+    .nav-mobile-cta {
+      margin-top: 1.5rem;
+      display: block;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--amber);
+      color: var(--navy);
+      padding: 0.9rem 2rem;
+      border-radius: 2px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+    }
+    .nav-mobile-cta:hover { background: var(--amber-light); }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
       .hero-inner,
@@ -1030,16 +1116,54 @@
       .cred-divider { display: none; }
 
       .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
 
       :root { --section-gap: 4.5rem; }
     }
 
     @media (max-width: 600px) {
+      :root { --section-gap: 3rem; }
+
+      .container, .container--narrow { padding: 0 1.25rem; }
+
+      nav { padding: 1rem 1.25rem; }
+      .nav-cta { font-size: 0.68rem; padding: 0.5rem 0.9rem; }
+      .nav-mobile { top: 57px; padding: 0.5rem 1.25rem 1.75rem; }
+
+      h1 { font-size: 1.95rem; }
+      h2 { font-size: 1.45rem; }
+      h3 { font-size: 1.05rem; }
+
+      .hero { padding-top: 3.5rem; }
+      .hero-sub { font-size: 0.95rem; }
+      .hero-actions { flex-direction: column; gap: 0.75rem; }
+      .btn-primary, .btn-secondary { text-align: center; width: 100%; box-sizing: border-box; }
+
+      .cred-strip-inner { flex-direction: column; align-items: center; gap: 1.5rem; text-align: center; }
+      .cred-number { font-size: 1.65rem; }
+
       .services-grid { grid-template-columns: 1fr; }
       .serve-cards { grid-template-columns: 1fr; }
-      h1 { font-size: 2.2rem; }
-      .form-row--2 { grid-template-columns: 1fr; }
-      .form-row--3 { grid-template-columns: 1fr; }
+
+      .case-outcome { flex-direction: column; gap: 1.25rem; }
+
+      .process-steps::before { display: none; }
+      .process-step { flex-direction: column; gap: 0.75rem; padding: 1.5rem 0; }
+      .step-marker { width: 2.75rem; height: 2.75rem; font-size: 0.78rem; }
+
+      .practice-items { gap: 1.5rem; }
+      .practice-item { padding: 1.75rem; }
+
+      .problem-quote { padding: 1.5rem; }
+      .problem-quote p { font-size: 1rem; }
+
+      footer { flex-direction: column; align-items: flex-start; gap: 1.25rem; padding: 1.75rem 1.25rem; }
+      .footer-links { flex-wrap: wrap; gap: 1rem 1.5rem; }
+
+      /* Modal */
+      .modal-header, .modal-body { padding: 1.5rem; }
+      .modal-box { max-height: 96vh; }
+      .form-row--2, .form-row--3 { grid-template-columns: 1fr; }
     }
 
     /* ── DISCOVERY FORM MODAL ── */
@@ -1240,6 +1364,43 @@
       .modal-box { max-height: 96vh; }
     }
   </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "AdminWorks",
+    "description": "Specialized bookkeeping and fractional controller services exclusively for IT Service Providers and MSPs. QuickBooks aligned to industry standards for peer groups, benchmarking, and acquisition readiness.",
+    "url": "https://www.adminworks.llc/",
+    "email": "info@adminworks.llc",
+    "serviceType": [
+      "Bookkeeping",
+      "Fractional Controller Services",
+      "QuickBooks Setup and Alignment",
+      "Chart of Accounts Design",
+      "Financial Statement Preparation",
+      "Peer Group Reporting",
+      "Acquisition Readiness",
+      "GL Transaction Audits"
+    ],
+    "areaServed": {
+      "@type": "Country",
+      "name": "United States"
+    },
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "IT Service Providers, Managed Service Providers, MSPs"
+    },
+    "knowsAbout": [
+      "IT Service Provider Bookkeeping",
+      "Managed Service Provider Financials",
+      "MSP Chart of Accounts",
+      "QuickBooks for MSPs",
+      "Peer Group Financial Reporting",
+      "IT Industry Benchmarking"
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -1256,7 +1417,21 @@
       <li><a href="#about">About</a></li>
     </ul>
     <button onclick="openDiscoveryForm()" class="nav-cta" style="cursor:pointer;border:none;">Schedule a Call</button>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- Mobile nav drawer -->
+  <div class="nav-mobile" id="navMobile" aria-hidden="true">
+    <ul>
+      <li><a href="#who-we-serve" onclick="closeMobileNav()">Who We Serve</a></li>
+      <li><a href="#services" onclick="closeMobileNav()">Services</a></li>
+      <li><a href="#how-we-work" onclick="closeMobileNav()">How We Work</a></li>
+      <li><a href="#about" onclick="closeMobileNav()">About</a></li>
+    </ul>
+    <button class="nav-mobile-cta" onclick="closeMobileNav(); openDiscoveryForm();">Schedule a Discovery Call</button>
+  </div>
 
   <!-- HERO -->
   <section class="hero">
@@ -1688,7 +1863,7 @@
           We'll learn where your books stand today, what your goals are, and what it would take to get your financials aligned with how your business and the industry actually work. No commitment required.
         </p>
         <div class="cta-actions">
-          <a href="https://form.jotform.com/261179501093051" target="_blank" class="btn-primary">Schedule a Discovery Call</a>
+          <button onclick="openDiscoveryForm()" class="btn-primary" style="cursor:pointer;border:none;">Schedule a Discovery Call</button>
           <a href="mailto:info@adminworksllc.com" class="btn-secondary">Send Us an Email</a>
         </div>
         <p class="cta-contact">
@@ -1876,6 +2051,36 @@
   <iframe name="jotform-target" style="display:none" title="Form submission target"></iframe>
 
   <script>
+    /* ── MOBILE NAV ── */
+    const hamburger = document.getElementById('navHamburger');
+    const mobileNav = document.getElementById('navMobile');
+
+    hamburger.addEventListener('click', function() {
+      const isOpen = mobileNav.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+      mobileNav.setAttribute('aria-hidden', !isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    function closeMobileNav() {
+      mobileNav.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+      mobileNav.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    // Close mobile nav on outside click
+    document.addEventListener('click', function(e) {
+      if (mobileNav.classList.contains('open') &&
+          !mobileNav.contains(e.target) &&
+          !hamburger.contains(e.target)) {
+        closeMobileNav();
+      }
+    });
+
+    /* ── DISCOVERY FORM MODAL ── */
     function openDiscoveryForm() {
       document.getElementById('discoveryModal').classList.add('active');
       document.body.style.overflow = 'hidden';
