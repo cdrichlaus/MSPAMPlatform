@@ -1038,6 +1038,206 @@
       .services-grid { grid-template-columns: 1fr; }
       .serve-cards { grid-template-columns: 1fr; }
       h1 { font-size: 2.2rem; }
+      .form-row--2 { grid-template-columns: 1fr; }
+      .form-row--3 { grid-template-columns: 1fr; }
+    }
+
+    /* ── DISCOVERY FORM MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-box {
+      background: var(--navy-mid);
+      border: 1px solid rgba(200,146,42,0.28);
+      border-radius: 6px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+      transform: translateY(24px);
+      transition: transform 0.3s;
+      scrollbar-width: thin;
+      scrollbar-color: var(--amber-dim) transparent;
+    }
+    .modal-overlay.active .modal-box { transform: translateY(0); }
+    .modal-header {
+      padding: 2rem 2.5rem 1.5rem;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      background: var(--navy-mid);
+      z-index: 10;
+    }
+    .modal-header h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      color: var(--cream);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .modal-header p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.04em;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--slate);
+      cursor: pointer;
+      font-size: 1.5rem;
+      line-height: 1;
+      padding: 0.15rem 0.3rem;
+      transition: color 0.2s;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      font-family: sans-serif;
+    }
+    .modal-close:hover { color: var(--cream); }
+    .modal-body { padding: 2rem 2.5rem 2.5rem; }
+    .form-row {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .form-row--2 { grid-template-columns: 1fr 1fr; }
+    .form-row--3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .form-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      font-weight: 500;
+    }
+    .form-label .req { color: var(--amber-light); }
+    .form-input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(176,191,204,0.2);
+      border-radius: 2px;
+      padding: 0.65rem 0.9rem;
+      color: var(--cream);
+      font-family: 'Lato', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, background 0.2s;
+      outline: none;
+      width: 100%;
+    }
+    .form-input:focus {
+      border-color: var(--amber);
+      background: rgba(200,146,42,0.05);
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    .radio-group {
+      display: flex;
+      gap: 1.75rem;
+      margin-top: 0.25rem;
+      flex-wrap: wrap;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-body);
+      font-family: 'Lato', sans-serif;
+    }
+    .radio-label input[type="radio"] {
+      accent-color: var(--amber);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .modal-divider {
+      height: 1px;
+      background: var(--rule);
+      margin: 1.75rem 0;
+    }
+    .modal-submit {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--amber);
+      color: var(--navy);
+      padding: 0.95rem 2rem;
+      border-radius: 2px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .modal-submit:hover {
+      background: var(--amber-light);
+      transform: translateY(-1px);
+    }
+    .modal-thankyou {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 2.5rem;
+      gap: 0.75rem;
+    }
+    .modal-thankyou.visible { display: flex; }
+    .modal-thankyou .ty-check {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--amber);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--amber);
+      font-size: 1.6rem;
+      margin-bottom: 0.75rem;
+      font-family: sans-serif;
+    }
+    .modal-thankyou h3 {
+      font-size: 1.5rem;
+      color: var(--cream);
+    }
+    .modal-thankyou p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 360px;
+      line-height: 1.7;
+    }
+    @media (max-width: 600px) {
+      .modal-header, .modal-body { padding: 1.5rem; }
+      .modal-box { max-height: 96vh; }
     }
   </style>
 </head>
@@ -1055,7 +1255,7 @@
       <li><a href="#how-we-work">How We Work</a></li>
       <li><a href="#about">About</a></li>
     </ul>
-    <a href="https://form.jotform.com/261179501093051" target="_blank" class="nav-cta">Schedule a Call</a>
+    <button onclick="openDiscoveryForm()" class="nav-cta" style="cursor:pointer;border:none;">Schedule a Call</button>
   </nav>
 
   <!-- HERO -->
@@ -1072,7 +1272,7 @@
             Built for IT Service Providers whose operational maturity has outpaced their financial reporting, and who know the difference. AdminWorks aligns your QuickBooks to how this industry actually measures itself.
           </p>
           <div class="hero-actions">
-            <a href="https://form.jotform.com/261179501093051" target="_blank" class="btn-primary">Schedule a Discovery Call</a>
+            <button onclick="openDiscoveryForm()" class="btn-primary" style="cursor:pointer;border:none;">Schedule a Discovery Call</button>
             <a href="#services" class="btn-secondary">Explore Services</a>
           </div>
         </div>
@@ -1510,6 +1710,208 @@
     </ul>
     <span class="footer-copy">© 2026 AdminWorks LLC · Built for IT Service Providers</span>
   </footer>
+
+
+  <!-- ── DISCOVERY FORM MODAL ── -->
+  <div class="modal-overlay" id="discoveryModal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+
+      <!-- Header -->
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-title">AdminWorks Discovery Request</h3>
+          <p>Please provide your information for review.</p>
+        </div>
+        <button class="modal-close" onclick="closeDiscoveryForm()" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Thank-you screen (hidden until submit) -->
+      <div class="modal-thankyou" id="modalThankyou">
+        <div class="ty-check">&#10003;</div>
+        <h3>Thank You</h3>
+        <p>We'll review your responses and reach out to schedule your discovery call.</p>
+      </div>
+
+      <!-- Form body -->
+      <div class="modal-body" id="modalFormBody">
+        <form id="discoveryForm" method="POST" action="https://submit.jotform.com/submit/261179501093051" target="jotform-target">
+          <input type="hidden" name="formID" value="261179501093051">
+          <input type="hidden" name="simple_spc" value="261179501093051-261179501093051">
+          <input type="hidden" name="submitSource" value="embedded">
+          <!-- Honeypot -->
+          <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+
+          <!-- Full Name -->
+          <div class="form-row form-row--2">
+            <div class="form-group">
+              <label class="form-label" for="mf_first">First Name <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_first" name="q2_q2_fullname0[first]" required placeholder="First">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mf_last">Last Name <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_last" name="q2_q2_fullname0[last]" required placeholder="Last">
+            </div>
+          </div>
+
+          <!-- Company Name -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="mf_company">Company Name <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_company" name="q3_q3_textbox1" required placeholder="Your company name">
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="mf_addr1">Street Address <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_addr1" name="q4_q4_address2[addr_line1]" required placeholder="Street Address">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <input class="form-input" type="text" name="q4_q4_address2[addr_line2]" placeholder="Street Address Line 2 (optional)">
+            </div>
+          </div>
+          <div class="form-row form-row--3">
+            <div class="form-group">
+              <label class="form-label" for="mf_city">City</label>
+              <input class="form-input" type="text" id="mf_city" name="q4_q4_address2[city]" placeholder="City">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mf_state">State</label>
+              <input class="form-input" type="text" id="mf_state" name="q4_q4_address2[state]" placeholder="State">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mf_zip">Zip Code</label>
+              <input class="form-input" type="text" id="mf_zip" name="q4_q4_address2[postal]" placeholder="Zip">
+            </div>
+          </div>
+
+          <!-- Email + Phone -->
+          <div class="form-row form-row--2">
+            <div class="form-group">
+              <label class="form-label" for="mf_email">Email Address <span class="req">*</span></label>
+              <input class="form-input" type="email" id="mf_email" name="q5_q5_email3" required placeholder="example@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mf_phone">Phone Number <span class="req">*</span></label>
+              <input class="form-input" type="tel" id="mf_phone" name="q6_q6_phone4[full]" required placeholder="(000) 000-0000">
+            </div>
+          </div>
+
+          <div class="modal-divider"></div>
+
+          <!-- Peer group / coaching -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Enrolled in a peer group or coaching program? <span class="req">*</span></label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="q7_q7_radio5" value="Yes" required> Yes</label>
+                <label class="radio-label"><input type="radio" name="q7_q7_radio5" value="No"> No</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- If yes, indicate program -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="mf_program">If yes, indicate the program</label>
+              <input class="form-input" type="text" id="mf_program" name="q8_q8_textbox6" placeholder="Program name">
+            </div>
+          </div>
+
+          <!-- Industry standard CoA -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Operating under an industry standard Chart of Accounts? <span class="req">*</span></label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="q9_q9_radio7" value="Yes" required> Yes</label>
+                <label class="radio-label"><input type="radio" name="q9_q9_radio7" value="No"> No</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desire to transition -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">If not, desiring to transition to an industry standard?</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="q10_q10_radio8" value="Yes"> Yes</label>
+                <label class="radio-label"><input type="radio" name="q10_q10_radio8" value="No"> No</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-divider"></div>
+
+          <!-- Accounting System + PSA -->
+          <div class="form-row form-row--2">
+            <div class="form-group">
+              <label class="form-label" for="mf_acct">Current Accounting System <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_acct" name="q11_q11_textbox9" required placeholder="e.g. QuickBooks, Xero">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mf_psa">Current PSA <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_psa" name="q12_q12_textbox10" required placeholder="e.g. ConnectWise, Autotask">
+            </div>
+          </div>
+
+          <!-- How did you hear -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="mf_referral">How did you hear about us? <span class="req">*</span></label>
+              <input class="form-input" type="text" id="mf_referral" name="q13_q13_textbox11" required placeholder="Referral, LinkedIn, Google…">
+            </div>
+          </div>
+
+          <button type="submit" class="modal-submit">Submit Request</button>
+        </form>
+      </div><!-- /modal-body -->
+
+    </div><!-- /modal-box -->
+  </div><!-- /modal-overlay -->
+
+  <!-- Hidden iframe receives JotForm response so the page doesn't navigate -->
+  <iframe name="jotform-target" style="display:none" title="Form submission target"></iframe>
+
+  <script>
+    function openDiscoveryForm() {
+      document.getElementById('discoveryModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDiscoveryForm() {
+      document.getElementById('discoveryModal').classList.remove('active');
+      document.body.style.overflow = '';
+      // Reset form and hide thank-you after transition completes
+      setTimeout(function() {
+        document.getElementById('modalThankyou').classList.remove('visible');
+        document.getElementById('modalFormBody').style.display = '';
+        document.getElementById('discoveryForm').reset();
+        document.querySelector('.modal-box').scrollTop = 0;
+      }, 320);
+    }
+
+    // Close on backdrop click
+    document.getElementById('discoveryModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDiscoveryForm();
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDiscoveryForm();
+    });
+
+    // On submit: let form POST to hidden iframe, then show thank-you screen
+    document.getElementById('discoveryForm').addEventListener('submit', function() {
+      setTimeout(function() {
+        document.getElementById('modalFormBody').style.display = 'none';
+        document.getElementById('modalThankyou').classList.add('visible');
+        document.querySelector('.modal-box').scrollTop = 0;
+      }, 400);
+    });
+  </script>
 
 </body>
 </html>
