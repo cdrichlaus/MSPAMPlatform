@@ -14,6 +14,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Force FTP DNS resolution
+        run: echo "132.148.179.45 ftp.adminworksllc.com" | sudo tee -a /etc/hosts
+
       - name: Prepare deploy folder
         run: |
           mkdir -p deploy
